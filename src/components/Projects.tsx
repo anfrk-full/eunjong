@@ -113,6 +113,9 @@ const projectData: Project[] = [
           '동물 배정 기능 구현, 동물배정 목록 날짜별표시 및 배정조회 쿼리 최적화\n' +
           '실험동물의 개체 정보, 시험군 배정, 관찰 기록 등을 효율적으로 관리할 수 있도록 구현하였습니다.',
         images: [
+          '/images/exam/ani1.JPG',
+          '/images/exam/ani2.JPG',
+          '/images/exam/ani3.JPG',
         ],
       },
       {
