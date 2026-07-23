@@ -128,19 +128,6 @@ const projectData: Project[] = [
       },
     ],
   },
-  {
-    title: '프로젝트1',
-    description: '프로젝트1 소개',
-    longDesc:
-      '프로젝트1 소개',
-    category: 'Backend',
-    tech: ['Java', 'Spring Boot', 'MySQL'],
-    emoji: '📂',
-    highlights: [''],
-    role: '백엔드 개발',
-    period: '2024.09 – 2024.11',
-    members: '1명',
-  },
 ];
 
 const CATEGORIES: Category[] = ['All', 'Frontend', 'Backend', 'Fullstack'];
