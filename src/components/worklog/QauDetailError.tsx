@@ -264,7 +264,7 @@ AND qau_name = ?`}</pre>
               <tr>
                 <td>general_form/*</td>
                 <td>단계별 step</td>
-                <td>동일 패턴 재사용</td>
+                <td>동일 패턴 재사용 </td>
               </tr>
             </tbody>
           </table>
