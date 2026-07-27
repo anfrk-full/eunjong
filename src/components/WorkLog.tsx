@@ -4,6 +4,7 @@ import { useInView } from '../hooks/useInView';
 import ChangeRecordAppend from './worklog/ChangeRecordAppend';
 import QauDetailError from './worklog/QauDetailError';
 import ScheduleManage from './worklog/ScheduleManage';
+import AniControlQueryOptimization from './worklog/AniControlQueryOptimization';
 
 interface WorkCaseStat {
   value: string;
@@ -26,6 +27,21 @@ interface WorkCase {
  * 2) 아래 workCases 배열에 메타데이터 + Content 등록
  */
 const workCases: WorkCase[] = [
+  {
+    id: 'ani-control-query-opt',
+    date: '2025',
+    title: '동물실 배정 화면 쿼리 최적화',
+    summary:
+      'ani_control_1.php의 루프 내 반복 조회(N+1)가 페이지 지연을 유발해, ani_control_1_test.php에서 IN 배치 조회 + 메모리 캐시로 개선한 사례. UI/도메인 로직은 유지하고 데이터 접근 패턴만 재설계했습니다.',
+    tags: ['Case Study', 'Performance', 'N+1 → Batch', 'PHP / MySQL'],
+    stats: [
+      { value: 'N+1', label: 'Before access pattern' },
+      { value: 'O(1) lookup', label: 'After cache access' },
+      { value: '2 paths', label: '목록 + 케이지맵 모두 개선' },
+      { value: 'Same UX', label: '기능 회귀 없이 성능만 개선' },
+    ],
+    Content: AniControlQueryOptimization,
+  },
   {
     id: 'schedule-manage',
     date: '2025',
@@ -189,6 +205,14 @@ const WorkLog: React.FC = () => {
               <hr className="cs__divider" />
 
               <selected.Content />
+
+              <button
+                type="button"
+                className="wl__back"
+                onClick={() => setSelectedId(null)}
+              >
+                ← All case studies
+              </button>
             </motion.div>
           )}
         </AnimatePresence>

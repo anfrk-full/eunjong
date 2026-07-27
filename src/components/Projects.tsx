@@ -37,7 +37,7 @@ const projectData: Project[] = [
     description: '운동인을 위한 추천 및 매칭 플랫폼',
     longDesc:
       '맞춤형 운동/식단 추천, 운동 크루 매칭, 종목별 커뮤니티 등 운동인을 위한 종합 플랫폼입니다.',
-    category: 'Frontend',
+    category: 'Fullstack',
     tech: ['React', 'Spring Boot', 'MySQL', 'TypeScript'],
     github: 'https://github.com/maechu-egg/multicampus_maechu_back',
     video: 'https://www.youtube.com/watch?v=roMHHzFvCP4',
@@ -58,15 +58,16 @@ const projectData: Project[] = [
       'TypeScript를 고도화해 타입 안정성을 높이고 싶습니다.',
     contribution:
       '✦ 크루 찾기 페이지\n' +
-      '운동 종목·지역 기반 필터링 기능 구현으로 사용자 맞춤 크루 탐색 지원\n\n' +
+      '검색만으로 찾던 크루를 운동 종목·지역 기반 필터링 기능 구현으로 사용자가 더 쉽게 찾을 수 있도록 사용자 경험 개선\n\n' +
       '✦ 크루 소개 페이지\n' +
-      '크루 이름·이미지·소개글을 카드 UI로 직관적으로 표시, 반응형 디자인 적용\n\n' +
+      '별도의 페이지에서 보이던 크루 이름·이미지·소개글을 카드 UI로 직관적으로 표시하여 사용자가 더 편하게 확인할 수 있도록 개선\n\n' +
       '✦ 크루원 정보 페이지\n' +
       '크루원 프로필(배지·배틀 승리 수 등) 표시로 상세 정보 제공\n\n' +
       '✦ 크루 게시판\n' +
       '게시물 작성·댓글·좋아요 기능 구현, 공지 및 자유 소통 채널 제공\n\n' +
       '✦ 배틀 현황 페이지\n' +
-      '배틀 시작일·종료일·TOP2 유저·진행 상황을 실시간 표시, 상태 관리 및 API 자동 갱신 구현',
+      '배틀 시작일·종료일·TOP2 유저·진행 상황을 실시간 표시, 상태 관리 및 API 자동 갱신 구현\n\n' +
+      '테스트코드 작성으로 코드 안정성을 높이고, 잘못된 데이터가 들어왔을 때 예외처리를 할 수 있도록 여러 상황을 입력하여 개선',
   },
   {
     title: '시험관리프로그램',
