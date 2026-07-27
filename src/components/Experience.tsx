@@ -18,10 +18,9 @@ const experienceData: ExperienceItem[] = [
     role: '풀스택 개발자',
     type: '파견직',
     tasks: [
-      'PHP를 사용한 웹사이트 유지 보수 및 개발',
-      'MariaDB 유지 보수 및 개발',
-      'PHP 웹사이트의 React + Spring Boot화',
-      
+      'PHP 웹사이트 유지보수 및 기능 개발',
+      'MariaDB 스키마·쿼리 유지보수',
+      'PHP → React + Spring Boot 전환 작업',
     ],
     tech: ['PHP', 'React', 'TypeScript', 'Node.js', 'MySQL'],
   },
@@ -30,29 +29,23 @@ const experienceData: ExperienceItem[] = [
 const Experience: React.FC = () => {
   const { ref, inView } = useInView();
   const [activeIdx, setActiveIdx] = useState(0);
+  const active = experienceData[activeIdx];
 
   return (
     <section id="experience" className="section experience">
       <div className="container" ref={ref}>
         <motion.div
           className="section__header"
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.5 }}
         >
+          <span className="section__label">Experience</span>
           <h2 className="section__title">Experience</h2>
-          <div className="section__line" />
-          <p className="section__subtitle">경력 및 실무 경험입니다.</p>
         </motion.div>
 
         <div className="exp__layout">
-          {/* 탭 목록 */}
-          <motion.div
-            className="exp__tabs"
-            initial={{ opacity: 0, x: -30 }}
-            animate={inView ? { opacity: 1, x: 0 } : {}}
-            transition={{ duration: 0.6, delay: 0.2 }}
-          >
+          <div className="exp__tabs">
             {experienceData.map((item, idx) => (
               <button
                 key={idx}
@@ -63,42 +56,39 @@ const Experience: React.FC = () => {
                 <span className="exp__tab-period">{item.period}</span>
               </button>
             ))}
-          </motion.div>
+          </div>
 
-          {/* 상세 내용 */}
           <AnimatePresence mode="wait">
             <motion.div
               key={activeIdx}
               className="exp__detail"
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.35 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.25 }}
             >
               <div className="exp__detail-header">
                 <div>
                   <h3 className="exp__role">
-                    {experienceData[activeIdx].role}
-                    <span className="exp__company">
-                      @ {experienceData[activeIdx].company}
-                    </span>
+                    {active.role}
+                    <span className="exp__company">@ {active.company}</span>
                   </h3>
-                  <p className="exp__period">{experienceData[activeIdx].period}</p>
+                  <p className="exp__period">{active.period}</p>
                 </div>
-                <span className="exp__type-badge">{experienceData[activeIdx].type}</span>
+                <span className="exp__type-badge">{active.type}</span>
               </div>
 
               <ul className="exp__tasks">
-                {experienceData[activeIdx].tasks.map((task, i) => (
+                {active.tasks.map((task, i) => (
                   <li key={i} className="exp__task-item">
-                    <span className="exp__task-arrow">▹</span>
+                    <span className="exp__task-arrow">–</span>
                     {task}
                   </li>
                 ))}
               </ul>
 
               <div className="exp__tech-list">
-                {experienceData[activeIdx].tech.map((t) => (
+                {active.tech.map((t) => (
                   <span key={t} className="exp__tech-tag">
                     {t}
                   </span>

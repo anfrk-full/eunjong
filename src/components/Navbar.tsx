@@ -6,9 +6,7 @@ const Navbar: React.FC = () => {
   const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 50);
-    };
+    const handleScroll = () => setScrolled(window.scrollY > 24);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -19,14 +17,14 @@ const Navbar: React.FC = () => {
     { label: 'Education', to: 'education' },
     { label: 'Experience', to: 'experience' },
     { label: 'Projects', to: 'projects' },
-    { label: 'Contact', to: 'contact' },
+    { label: 'Work Log', to: 'worklog' },
   ];
 
   return (
     <nav className={`navbar ${scrolled ? 'navbar--scrolled' : ''}`}>
       <div className="navbar__logo">
         <Link to="hero" smooth duration={600} style={{ cursor: 'pointer' }}>
-          &lt;EJ /&gt;
+          eunjong
         </Link>
       </div>
 

@@ -20,7 +20,7 @@ interface Project {
   github?: string;
   demo?: string;
   video?: string;
-  emoji: string;
+  emoji?: string;
   highlights: string[];
   role?: string;
   period?: string;
@@ -361,62 +361,54 @@ const ProjectModal: React.FC<{ project: Project; onClose: () => void }> = ({
           </svg>
         </button>
 
-        {/* 헤더 */}
         <div className="modal__header">
-          <span className="modal__emoji">{project.emoji}</span>
-          <div>
-            <span className="modal__category">{project.category}</span>
-            <h2 className="modal__title">{project.title}</h2>
-            <p className="modal__subtitle">{project.description}</p>
-          </div>
+          <span className="modal__category">{project.category}</span>
+          <h2 className="modal__title">{project.title}</h2>
+          <p className="modal__subtitle">{project.description}</p>
         </div>
 
-        {/* 메타 정보 */}
         {(project.period || project.role || project.members) && (
           <div className="modal__meta">
             {project.period && (
               <div className="modal__meta-item">
-                <span className="modal__meta-label">📅 기간</span>
+                <span className="modal__meta-label">Period</span>
                 <span className="modal__meta-value">{project.period}</span>
               </div>
             )}
             {project.role && (
               <div className="modal__meta-item">
-                <span className="modal__meta-label">👤 역할</span>
+                <span className="modal__meta-label">Role</span>
                 <span className="modal__meta-value">{project.role}</span>
               </div>
             )}
             {project.members && (
               <div className="modal__meta-item">
-                <span className="modal__meta-label">👥 인원</span>
+                <span className="modal__meta-label">Team</span>
                 <span className="modal__meta-value">{project.members}</span>
               </div>
             )}
           </div>
         )}
 
-        {/* 프로젝트 소개 */}
         <div className="modal__section">
-          <h3 className="modal__section-title">📌 프로젝트 소개</h3>
+          <h3 className="modal__section-title">Overview</h3>
           <p className="modal__desc">{project.longDesc}</p>
         </div>
 
-        {/* 주요 기능 */}
         <div className="modal__section">
-          <h3 className="modal__section-title">✨ 주요 기능</h3>
+          <h3 className="modal__section-title">Features</h3>
           <ul className="modal__highlights">
             {project.highlights.map((h) => (
               <li key={h} className="modal__highlight-item">
-                <span className="modal__highlight-dot">▹</span>
+                <span className="modal__highlight-dot">—</span>
                 {h}
               </li>
             ))}
           </ul>
         </div>
 
-        {/* 기술 스택 */}
         <div className="modal__section">
-          <h3 className="modal__section-title">🛠 기술 스택</h3>
+          <h3 className="modal__section-title">Stack</h3>
           <div className="modal__tech">
             {project.tech.map((t) => (
               <span key={t} className="modal__tech-tag">{t}</span>
@@ -424,28 +416,25 @@ const ProjectModal: React.FC<{ project: Project; onClose: () => void }> = ({
           </div>
         </div>
 
-        {/* 기여 내용 — 탭형 (이미지 포함) */}
         {project.contributionTabs && project.contributionTabs.length > 0 && (
           <div className="modal__section">
-            <h3 className="modal__section-title">🙋 나의 기여</h3>
+            <h3 className="modal__section-title">Contribution</h3>
             <ContributionTabSection tabs={project.contributionTabs} />
           </div>
         )}
 
-        {/* 기여 내용 — 텍스트형 (기존 방식) */}
         {!project.contributionTabs && project.contribution && (
           <div className="modal__section">
-            <h3 className="modal__section-title">🙋 나의 기여</h3>
+            <h3 className="modal__section-title">Contribution</h3>
             <p className="modal__desc" style={{ whiteSpace: 'pre-line' }}>
               {project.contribution}
             </p>
           </div>
         )}
 
-        {/* 트러블슈팅 */}
         {project.troubleshooting && project.troubleshooting.length > 0 && (
           <div className="modal__section">
-            <h3 className="modal__section-title">🔧 트러블슈팅</h3>
+            <h3 className="modal__section-title">Troubleshooting</h3>
             <ul className="modal__trouble-list">
               {project.troubleshooting.map((item, i) => (
                 <li key={i} className="modal__trouble-item">
@@ -457,10 +446,9 @@ const ProjectModal: React.FC<{ project: Project; onClose: () => void }> = ({
           </div>
         )}
 
-        {/* 회고 */}
         {project.retrospective && (
           <div className="modal__section modal__section--retro">
-            <h3 className="modal__section-title">💬 회고</h3>
+            <h3 className="modal__section-title">Retrospective</h3>
             <blockquote className="modal__retro">
               {project.retrospective}
             </blockquote>
@@ -515,21 +503,20 @@ const Projects: React.FC = () => {
       <div className="container" ref={ref}>
         <motion.div
           className="section__header"
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.5 }}
         >
-          <h2 className="section__title">Projects</h2>
-          <div className="section__line" />
-          <p className="section__subtitle">직접 개발한 주요 프로젝트들입니다. 카드를 클릭하면 자세히 볼 수 있습니다.</p>
+          <span className="section__label">Projects</span>
+          <h2 className="section__title">Selected work</h2>
+          <p className="section__subtitle">클릭하면 상세 내용을 볼 수 있습니다.</p>
         </motion.div>
 
-        {/* 카테고리 필터 */}
         <motion.div
           className="projects__filter"
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.5, delay: 0.2 }}
+          transition={{ duration: 0.4, delay: 0.05 }}
         >
           {CATEGORIES.map((cat) => (
             <button
@@ -542,50 +529,37 @@ const Projects: React.FC = () => {
           ))}
         </motion.div>
 
-        {/* 프로젝트 카드 그리드 */}
-        <motion.div className="projects__grid" layout>
+        <div className="projects__grid">
           <AnimatePresence mode="popLayout">
             {filtered.map((project, idx) => (
-              <motion.div
+              <motion.button
                 key={project.title}
-                className="project-card project-card--clickable"
+                type="button"
+                className="project-card"
                 layout
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ duration: 0.35, delay: idx * 0.05 }}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.3, delay: idx * 0.04 }}
                 onClick={() => setSelectedProject(project)}
               >
-                <div className="project-card__emoji">{project.emoji}</div>
-                <div className="project-card__category-tag">{project.category}</div>
+                <div className="project-card__top">
+                  <span className="project-card__cat">{project.category}</span>
+                  <span className="project-card__arrow">→</span>
+                </div>
                 <h3 className="project-card__title">{project.title}</h3>
                 <p className="project-card__desc">{project.description}</p>
-                <p className="project-card__long-desc">{project.longDesc}</p>
-
-                <ul className="project-card__highlights">
-                  {project.highlights.map((h) => (
-                    <li key={h}>
-                      <span className="project-card__highlight-dot">✦</span> {h}
-                    </li>
-                  ))}
-                </ul>
-
                 <div className="project-card__tech">
-                  {project.tech.map((t) => (
-                    <span key={t} className="project-card__tech-tag">{t}</span>
+                  {project.tech.slice(0, 4).map((t) => (
+                    <span key={t}>{t}</span>
                   ))}
                 </div>
-
-                <div className="project-card__view-more">
-                  자세히 보기 →
-                </div>
-              </motion.div>
+              </motion.button>
             ))}
           </AnimatePresence>
-        </motion.div>
+        </div>
       </div>
 
-      {/* 모달 */}
       <AnimatePresence>
         {selectedProject && (
           <ProjectModal
