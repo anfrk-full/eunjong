@@ -5,6 +5,7 @@ import ChangeRecordAppend from './worklog/ChangeRecordAppend';
 import QauDetailError from './worklog/QauDetailError';
 import ScheduleManage from './worklog/ScheduleManage';
 import AniControlQueryOptimization from './worklog/AniControlQueryOptimization';
+import ProfileImagePipeline from './worklog/ProfileImagePipeline';
 
 interface WorkCaseStat {
   value: string;
@@ -27,6 +28,21 @@ interface WorkCase {
  * 2) 아래 workCases 배열에 메타데이터 + Content 등록
  */
 const workCases: WorkCase[] = [
+  {
+    id: 'profile-image-pipeline',
+    date: '2024',
+    title: '회원 프로필 이미지 업로드·조회 파이프라인',
+    summary:
+      'Spring Multipart 업로드와 React 조회를 분리해, DB에는 파일명만 저장하고 API·프론트에서 URL을 조합하는 프로필 이미지 파이프라인을 구축한 사례. Disk/DB/API/Frontend 책임을 나눠 “저장은 됐는데 안 보이는” 실패 모드를 구조적으로 제거했습니다.',
+    tags: ['Case Study', 'Spring Boot', 'MultipartFile', 'React'],
+    stats: [
+      { value: '4 layers', label: 'Disk · DB · API · FE 경계' },
+      { value: 'Filename only', label: 'DB 저장 전략' },
+      { value: 'Timestamp', label: '파일명 unique prefix' },
+      { value: 'BASE_URL', label: 'FE origin 결합' },
+    ],
+    Content: ProfileImagePipeline,
+  },
   {
     id: 'ani-control-query-opt',
     date: '2025',
