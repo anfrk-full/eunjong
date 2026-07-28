@@ -9,6 +9,7 @@ interface EducationItem {
   major: string;
   description: string;
   gpa?: string;
+  highlights?: string[];
 }
 
 const educationData: EducationItem[] = [
@@ -25,7 +26,8 @@ const educationData: EducationItem[] = [
     degree: '수료',
     school: '멀티캠퍼스 25기',
     major: 'Fullstack',
-    description: 'React, Vue, Spring Boot, MySQL 집중 학습. 팀 프로젝트 우수상, 최우수 학생 수료.',
+    description: 'React, Vue, Spring Boot, MySQL을 집중적으로 학습했습니다.',
+    highlights: ['팀 프로젝트 우수상', '최우수 학생 수료'],
   },
 ];
 
@@ -62,6 +64,15 @@ const Education: React.FC = () => {
                 </h3>
                 <p className="edu__major">{item.major}</p>
                 <p className="edu__desc">{item.description}</p>
+                {item.highlights && item.highlights.length > 0 && (
+                  <ul className="edu__highlights">
+                    {item.highlights.map((h) => (
+                      <li key={h} className="edu__highlight">
+                        {h}
+                      </li>
+                    ))}
+                  </ul>
+                )}
                 {item.gpa && <p className="edu__gpa">GPA {item.gpa}</p>}
               </div>
             </motion.div>
