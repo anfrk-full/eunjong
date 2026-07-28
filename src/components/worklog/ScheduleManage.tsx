@@ -183,43 +183,6 @@ date > today  → 예정 (danger)`}</pre>
           </div>
         </div>
       </div>
-
-      <div className="cs__block">
-        <h3 className="cs__h2">Detail Panel Contents</h3>
-        <div className="cs__table-wrap">
-          <table className="cs__table">
-            <thead>
-              <tr>
-                <th>Block</th>
-                <th>Content</th>
-                <th>Interaction</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Header</td>
-                <td>시험번호 · 부처 · GLP여부 · 시설</td>
-                <td>시험번호 클릭 → 상세 페이지 새 탭</td>
-              </tr>
-              <tr>
-                <td>Meta</td>
-                <td>제목/물질/의뢰자/부서/항목/시험계/SD/담당/QAU</td>
-                <td>긴 텍스트 truncate + tooltip</td>
-              </tr>
-              <tr>
-                <td>Documents</td>
-                <td>시험계획서 / 변경기록지</td>
-                <td>파일 존재 시 열기, 없으면 disabled</td>
-              </tr>
-              <tr>
-                <td>Timeline</td>
-                <td>study_3 work + date 카드 목록</td>
-                <td>상태 색상 패널 + empty state 안내</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
     </>
   );
 };

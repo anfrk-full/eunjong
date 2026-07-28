@@ -224,52 +224,6 @@ AND qau_name = ?`}</pre>
           </table>
         </div>
       </div>
-
-      <div className="cs__block">
-        <h3 className="cs__h2">Downstream Impact</h3>
-        <div className="cs__callout cs__callout--info">
-          <strong>단일 입력 → 다중 소비</strong>
-          <p>
-            한 번 등록된 detail_error는 residue/general QAU 양식에서 step
-            조건으로 조회되어 공식 점검 문서에 자동 반영됩니다. 입력 화면과
-            문서 양식이 같은 데이터 소스를 공유하므로, “문서마다 다시 적기”
-            문제를 줄입니다.
-          </p>
-        </div>
-        <div className="cs__table-wrap">
-          <table className="cs__table">
-            <thead>
-              <tr>
-                <th>Consumer</th>
-                <th>Filter</th>
-                <th>Usage</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>residue_form_01</td>
-                <td>step=시험계획서</td>
-                <td>양식 textarea 자동 기입</td>
-              </tr>
-              <tr>
-                <td>residue_form_09</td>
-                <td>step=시험기초자료</td>
-                <td>양식 textarea 자동 기입</td>
-              </tr>
-              <tr>
-                <td>residue_form_10</td>
-                <td>step=최종보고서(초안)</td>
-                <td>양식 textarea 자동 기입</td>
-              </tr>
-              <tr>
-                <td>general_form/*</td>
-                <td>단계별 step</td>
-                <td>동일 패턴 재사용 </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
     </>
   );
 };
