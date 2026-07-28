@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import ReactDOM from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useInView } from '../hooks/useInView';
+import { usePage } from '../context/PageContext';
 
 type Category = 'All' | 'Frontend' | 'Backend' | 'Fullstack';
 
@@ -313,7 +315,7 @@ const ProjectModal: React.FC<{ project: Project; onClose: () => void }> = ({ pro
     };
   }, [onClose]);
 
-  return (
+  return ReactDOM.createPortal(
     <motion.div
       className="modal-overlay"
       initial={{ opacity: 0 }}
@@ -329,6 +331,7 @@ const ProjectModal: React.FC<{ project: Project; onClose: () => void }> = ({ pro
         exit={{ opacity: 0, scale: 0.92, y: 30 }}
         transition={{ duration: 0.3, ease: 'easeOut' }}
         onClick={(e) => e.stopPropagation()}
+        onWheel={(e) => e.stopPropagation()}
       >
         <button className="modal__close" onClick={onClose} aria-label="닫기">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -449,15 +452,27 @@ const ProjectModal: React.FC<{ project: Project; onClose: () => void }> = ({ pro
           )}
         </div>
       </motion.div>
-    </motion.div>
+    </motion.div>,
+    document.body
   );
 };
 
 /* ─── 메인 ─── */
 const Projects: React.FC = () => {
   const { ref, inView } = useInView();
+  const { setLocked, pageId } = usePage();
   const [activeCategory, setActiveCategory] = useState<Category>('All');
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+
+  useEffect(() => {
+    if (pageId !== 'projects') {
+      setSelectedProject(null);
+      setLocked(false);
+      return;
+    }
+    setLocked(!!selectedProject);
+    return () => setLocked(false);
+  }, [selectedProject, setLocked, pageId]);
 
   const filtered =
     activeCategory === 'All'

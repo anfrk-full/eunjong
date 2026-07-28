@@ -5,13 +5,20 @@
 }
 
 html {
-  scroll-behavior: smooth;
+  height: 100%;
+  overflow: hidden;
 }
 
 body {
   margin: 0;
+  height: 100%;
+  overflow: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  height: 100%;
 }
 
 ::-webkit-scrollbar {

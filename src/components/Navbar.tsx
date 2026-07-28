@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Link, animateScroll as scroll } from 'react-scroll';
 import { useTheme } from '../context/ThemeContext';
+import { usePage, PAGE_LABELS, PageId } from '../context/PageContext';
 
 const BURST_MS = 900;
 
@@ -24,18 +24,22 @@ const MoonIcon: React.FC = () => (
   </svg>
 );
 
+const navItems: { label: string; to: PageId }[] = [
+  { label: 'About', to: 'about' },
+  { label: 'Skills', to: 'skills' },
+  { label: 'Education', to: 'education' },
+  { label: 'Experience', to: 'experience' },
+  { label: 'Projects', to: 'projects' },
+  { label: 'Work Log', to: 'worklog' },
+];
+
 const Navbar: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
-  const [scrolled, setScrolled] = useState(false);
+  const { pageId, index, goTo } = usePage();
   const [menuOpen, setMenuOpen] = useState(false);
   const [burstKey, setBurstKey] = useState<string | null>(null);
   const burstTimer = useRef<number | null>(null);
-
-  useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 24);
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  const elevated = index > 0;
 
   useEffect(() => {
     return () => {
@@ -53,28 +57,19 @@ const Navbar: React.FC = () => {
     (e: React.MouseEvent) => {
       e.preventDefault();
       triggerBurst('logo');
-      scroll.scrollToTop({ duration: 700, smooth: 'easeInOutQuart' });
+      goTo('hero');
       setMenuOpen(false);
     },
-    [triggerBurst]
+    [triggerBurst, goTo]
   );
 
-  const navItems = [
-    { label: 'About', to: 'about' },
-    { label: 'Skills', to: 'skills' },
-    { label: 'Education', to: 'education' },
-    { label: 'Experience', to: 'experience' },
-    { label: 'Projects', to: 'projects' },
-    { label: 'Work Log', to: 'worklog' },
-  ];
-
   return (
-    <nav className={`navbar ${scrolled ? 'navbar--scrolled' : ''}`}>
+    <nav className={`navbar${elevated ? ' navbar--scrolled' : ''}`}>
       <button
         type="button"
         className={`navbar__logo ${burstKey === 'logo' ? 'navbar__logo--burst' : ''}`}
         onClick={handleLogoClick}
-        aria-label="맨 위로 이동"
+        aria-label={`${PAGE_LABELS.hero}로 이동`}
       >
         <span className="navbar__logo-stack" aria-hidden="true">
           <span className="navbar__logo-word navbar__logo-word--en">eunjong</span>
@@ -86,22 +81,20 @@ const Navbar: React.FC = () => {
       <ul className={`navbar__menu ${menuOpen ? 'navbar__menu--open' : ''}`}>
         {navItems.map((item) => (
           <li key={item.to} className="navbar__menu-item">
-            <Link
-              to={item.to}
-              smooth
-              duration={600}
-              offset={-70}
+            <button
+              type="button"
               onClick={() => {
                 triggerBurst(item.to);
+                goTo(item.to);
                 setMenuOpen(false);
               }}
-              className={`navbar__link ${burstKey === item.to ? 'navbar__link--burst' : ''}`}
-              activeClass="navbar__link--active"
-              spy
+              className={`navbar__link ${pageId === item.to ? 'navbar__link--active' : ''} ${
+                burstKey === item.to ? 'navbar__link--burst' : ''
+              }`}
             >
               <span className="navbar__link-label">{item.label}</span>
               <BurstFx />
-            </Link>
+            </button>
           </li>
         ))}
       </ul>
