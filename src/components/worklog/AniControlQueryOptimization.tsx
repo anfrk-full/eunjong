@@ -317,46 +317,6 @@ while ($row) {
           </div>
         </div>
       </div>
-
-      {/* Verification */}
-      <div className="cs__block">
-        <h3 className="cs__h2">6. Verification</h3>
-        <div className="cs__table-wrap">
-          <table className="cs__table">
-            <thead>
-              <tr>
-                <th>항목</th>
-                <th>결과</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>페이지 로딩·표시</td>
-                <td>정상</td>
-              </tr>
-              <tr>
-                <td>데이터 정확성 (배정/물질성질)</td>
-                <td>기존과 동일</td>
-              </tr>
-              <tr>
-                <td>쿼리 실행 횟수</td>
-                <td>배치 경로로 상수화 확인</td>
-              </tr>
-              <tr>
-                <td>기존 기능 회귀</td>
-                <td>없음</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <div className="cs__callout cs__callout--info">
-          <strong>배포 노트</strong>
-          <p>
-            최적화본은 ani_control_1_test.php에 구현. 프로덕션 반영 전 인덱스
-            (NO, sample_name, substance_name) 점검과 실측 모니터링을 권장합니다.
-          </p>
-        </div>
-      </div>
     </>
   );
 };
