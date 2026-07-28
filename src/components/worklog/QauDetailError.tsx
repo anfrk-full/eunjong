@@ -183,47 +183,7 @@ AND qau_name = ?`}</pre>
         </div>
       </div>
 
-      <div className="cs__block">
-        <h3 className="cs__h2">Read Path Details (error_show)</h3>
-        <div className="cs__table-wrap">
-          <table className="cs__table">
-            <thead>
-              <tr>
-                <th>Feature</th>
-                <th>How</th>
-                <th>Why</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>단일일 / 기간 토글</td>
-                <td>search-type에 따라 request payload 분기</td>
-                <td>일일 점검 vs 월간 리뷰 모두 지원</td>
-              </tr>
-              <tr>
-                <td>클라이언트 페이지네이션</td>
-                <td>20건 slice + 창형 페이지 버튼</td>
-                <td>즉시 반응, 서버 왕복 최소화</td>
-              </tr>
-              <tr>
-                <td>시험번호 즉시 검색</td>
-                <td>allData.filter on input</td>
-                <td>이미 로드된 결과 내 빠른 탐색</td>
-              </tr>
-              <tr>
-                <td>커스텀 툴팁</td>
-                <td>ellipsis + data-full-text hover</td>
-                <td>좁은 테이블에서도 전문 확인</td>
-              </tr>
-              <tr>
-                <td>Excel export</td>
-                <td>동일 필터를 excel_download.php로 전달</td>
-                <td>감사·보고용 원클릭 추출</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
+    
     </>
   );
 };
