@@ -64,6 +64,45 @@ const SheepHillsBackground: React.FC<Props> = ({ active, theme }) => {
     let stageWidth = 0;
     let stageHeight = 0;
     let raf = 0;
+    let grabbing = false;
+
+    const setGrabbing = (on: boolean) => {
+      grabbing = on;
+      canvas.classList.toggle('about__sheep-bg--grabbing', on);
+    };
+
+    const pointerPos = (e: PointerEvent) => {
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top,
+      };
+    };
+
+    const onPointerDown = (e: PointerEvent) => {
+      if (e.button !== 0) return;
+      const { x, y } = pointerPos(e);
+      if (sheepController.pointerDown(x, y)) {
+        setGrabbing(true);
+        canvas.setPointerCapture(e.pointerId);
+        e.preventDefault();
+      }
+    };
+
+    const onPointerMove = (e: PointerEvent) => {
+      if (!grabbing) return;
+      const { x, y } = pointerPos(e);
+      sheepController.pointerMove(x, y);
+    };
+
+    const onPointerUp = (e: PointerEvent) => {
+      if (!grabbing) return;
+      sheepController.pointerUp();
+      setGrabbing(false);
+      if (canvas.hasPointerCapture(e.pointerId)) {
+        canvas.releasePointerCapture(e.pointerId);
+      }
+    };
 
     const applyPalette = (mode: Theme) => {
       const palette = PALETTES[mode];
@@ -124,6 +163,12 @@ const SheepHillsBackground: React.FC<Props> = ({ active, theme }) => {
     const ro = new ResizeObserver(resize);
     if (canvas.parentElement) ro.observe(canvas.parentElement);
 
+    canvas.addEventListener('pointerdown', onPointerDown);
+    canvas.addEventListener('pointermove', onPointerMove);
+    canvas.addEventListener('pointerup', onPointerUp);
+    canvas.addEventListener('pointercancel', onPointerUp);
+    canvas.addEventListener('lostpointercapture', onPointerUp);
+
     const animate = (t: number) => {
       const mode = themeRef.current;
       const palette = PALETTES[mode];
@@ -153,6 +198,12 @@ const SheepHillsBackground: React.FC<Props> = ({ active, theme }) => {
     return () => {
       cancelAnimationFrame(raf);
       ro.disconnect();
+      canvas.removeEventListener('pointerdown', onPointerDown);
+      canvas.removeEventListener('pointermove', onPointerMove);
+      canvas.removeEventListener('pointerup', onPointerUp);
+      canvas.removeEventListener('pointercancel', onPointerUp);
+      canvas.removeEventListener('lostpointercapture', onPointerUp);
+      setGrabbing(false);
     };
   }, [active]);
 

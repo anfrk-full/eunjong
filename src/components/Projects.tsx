@@ -326,6 +326,7 @@ const ProjectModal: React.FC<{ project: Project; onClose: () => void }> = ({ pro
     >
       <motion.div
         className="modal"
+        data-scroll-y
         initial={{ opacity: 0, scale: 0.92, y: 30 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.92, y: 30 }}

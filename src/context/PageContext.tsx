@@ -50,12 +50,58 @@ const PageContext = createContext<PageContextValue | null>(null);
 const WHEEL_COOLDOWN_MS = 700;
 const SWIPE_THRESHOLD = 50;
 
+const SCROLL_Y_SELECTOR =
+  '[data-scroll-y], .modal, .wl__detail-scroll, .lightbox-overlay, .skills__expand';
+
+function isScrollableY(el: HTMLElement): boolean {
+  const style = window.getComputedStyle(el);
+  const overflowY = style.overflowY;
+  const canOverflow =
+    overflowY === 'auto' || overflowY === 'scroll' || overflowY === 'overlay';
+  return canOverflow && el.scrollHeight > el.clientHeight + 1;
+}
+
+/** 휠 이벤트 타깃에서 실제로 세로 스크롤 가능한 조상 찾기 */
+function findVerticalScroller(start: HTMLElement | null): HTMLElement | null {
+  if (!start) return null;
+
+  const marked = start.closest(SCROLL_Y_SELECTOR) as HTMLElement | null;
+  if (marked) {
+    if (isScrollableY(marked)) return marked;
+    const nested = marked.querySelector<HTMLElement>(
+      '[data-scroll-y], .modal, .wl__detail-scroll'
+    );
+    if (nested && isScrollableY(nested)) return nested;
+    if (marked.scrollHeight >= marked.clientHeight) return marked;
+  }
+
+  let el: HTMLElement | null = start;
+  while (el && el !== document.body && el !== document.documentElement) {
+    if (isScrollableY(el)) return el;
+    el = el.parentElement;
+  }
+  return null;
+}
+
+function canScrollY(el: HTMLElement, deltaY: number): boolean {
+  const { scrollTop, scrollHeight, clientHeight } = el;
+  if (scrollHeight <= clientHeight + 1) return false;
+  if (deltaY > 0) return scrollTop + clientHeight < scrollHeight - 1;
+  if (deltaY < 0) return scrollTop > 1;
+  return false;
+}
+
 export const PageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [index, setIndex] = useState(0);
   const [locked, setLocked] = useState(false);
   const cooldown = useRef(false);
   const touchStart = useRef<{ x: number; y: number } | null>(null);
   const wheelConsumer = useRef<WheelConsumer | null>(null);
+  const lockedRef = useRef(locked);
+
+  useEffect(() => {
+    lockedRef.current = locked;
+  }, [locked]);
 
   const setWheelConsumer = useCallback((consumer: WheelConsumer | null) => {
     wheelConsumer.current = consumer;
@@ -90,19 +136,33 @@ export const PageProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     const onWheel = (e: WheelEvent) => {
-      if (locked) return;
       const target = e.target as HTMLElement | null;
-      if (target?.closest('.modal-overlay, .wl__detail-scroll, .lightbox-overlay')) {
+      const scroller = findVerticalScroller(target);
+      const deltaY = e.deltaY;
+      const deltaX = e.deltaX;
+      const dominantDelta =
+        Math.abs(deltaY) >= Math.abs(deltaX) ? deltaY : deltaX;
+
+      // 상세/모달 등 세로 스크롤 영역: 페이지 전환 대신 내부 스크롤 우선
+      if (scroller && Math.abs(deltaY) >= Math.abs(deltaX)) {
+        if (lockedRef.current || canScrollY(scroller, deltaY)) {
+          return;
+        }
+      }
+
+      if (lockedRef.current) {
+        e.preventDefault();
         return;
       }
-      if (Math.abs(e.deltaY) < 8 && Math.abs(e.deltaX) < 8) return;
+
+      if (Math.abs(deltaY) < 8 && Math.abs(deltaX) < 8) return;
       e.preventDefault();
       if (cooldown.current) return;
-      const delta = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
-      if (delta === 0) return;
-      // 섹션이 휠을 소비하면 페이지 쿨다운을 걸지 않아 연속 스크롤 가능
-      if (wheelConsumer.current?.(delta)) return;
-      if (delta > 0) {
+      if (dominantDelta === 0) return;
+
+      if (wheelConsumer.current?.(dominantDelta)) return;
+
+      if (dominantDelta > 0) {
         setIndex((i) => Math.min(i + 1, pageCount - 1));
       } else {
         setIndex((i) => Math.max(i - 1, 0));
@@ -111,7 +171,7 @@ export const PageProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     const onKey = (e: KeyboardEvent) => {
-      if (locked) return;
+      if (lockedRef.current) return;
       const tag = (e.target as HTMLElement)?.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA') return;
       if (e.key === 'ArrowRight' || e.key === 'PageDown') {
@@ -135,7 +195,12 @@ export const PageProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     const onTouchEnd = (e: TouchEvent) => {
-      if (locked || !touchStart.current) return;
+      if (lockedRef.current || !touchStart.current) return;
+      const target = e.target as HTMLElement | null;
+      if (findVerticalScroller(target)) {
+        touchStart.current = null;
+        return;
+      }
       const t = e.changedTouches[0];
       const dx = t.clientX - touchStart.current.x;
       const dy = t.clientY - touchStart.current.y;
@@ -155,7 +220,7 @@ export const PageProvider: React.FC<{ children: React.ReactNode }> = ({ children
       window.removeEventListener('touchstart', onTouchStart);
       window.removeEventListener('touchend', onTouchEnd);
     };
-  }, [locked, pageCount, bumpCooldown]);
+  }, [pageCount, bumpCooldown]);
 
   const value = useMemo(
     () => ({

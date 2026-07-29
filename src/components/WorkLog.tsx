@@ -283,6 +283,7 @@ const WorkLog: React.FC = () => {
 
               <div
                 className="wl__detail-scroll"
+                data-scroll-y
                 ref={scrollRef}
                 onWheel={(e) => e.stopPropagation()}
               >

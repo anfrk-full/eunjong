@@ -159,10 +159,7 @@ const Skills: React.FC = () => {
   }, [pageId]);
 
   useEffect(() => {
-    if (pageId !== 'skills') {
-      setWheelConsumer(null);
-      return;
-    }
+    if (pageId !== 'skills') return;
 
     setWheelConsumer((delta) => {
       if (expandedRef.current) return true;
