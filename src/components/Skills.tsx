@@ -93,8 +93,8 @@ const skillCategories: SkillCategory[] = [
 
 const ANGLE_STEP = 14;
 const LAST = skillCategories.length - 1;
-const DELTA_PER_CARD = 110;
-const MAX_STEPS_PER_EVENT = 2;
+const DELTA_PER_CARD = 160;
+const STEP_COOLDOWN_MS = 420;
 
 const LEVEL_LABELS = ['', 'Familiar', 'Working', 'Solid', 'Strong', 'Expert'];
 const SKILL_ICON_URL: Record<string, string> = {
@@ -124,6 +124,7 @@ const Skills: React.FC = () => {
   const activeRef = useRef(0);
   const expandedRef = useRef(false);
   const accumRef = useRef(0);
+  const coolUntilRef = useRef(0);
   const prevPageRef = useRef(pageId);
 
   const activeCategory = skillCategories[active];
@@ -148,12 +149,14 @@ const Skills: React.FC = () => {
         activeRef.current = 0;
       }
       accumRef.current = 0;
+      coolUntilRef.current = 0;
       setExpanded(false);
       expandedRef.current = false;
     }
     if (pageId !== 'skills') {
       setExpanded(false);
       expandedRef.current = false;
+      coolUntilRef.current = 0;
     }
     prevPageRef.current = pageId;
   }, [pageId]);
@@ -163,6 +166,8 @@ const Skills: React.FC = () => {
 
     setWheelConsumer((delta) => {
       if (expandedRef.current) return true;
+      const now = performance.now();
+      if (now < coolUntilRef.current) return true;
 
       const i = activeRef.current;
 
@@ -176,19 +181,13 @@ const Skills: React.FC = () => {
       }
 
       accumRef.current += delta;
-      let steps = Math.trunc(accumRef.current / DELTA_PER_CARD);
-      if (steps === 0) return true;
+      if (Math.abs(accumRef.current) < DELTA_PER_CARD) return true;
 
-      if (Math.abs(steps) > MAX_STEPS_PER_EVENT) {
-        steps = Math.sign(steps) * MAX_STEPS_PER_EVENT;
-      }
+      const dir = accumRef.current > 0 ? 1 : -1;
+      accumRef.current = 0;
+      coolUntilRef.current = now + STEP_COOLDOWN_MS;
 
-      accumRef.current -= steps * DELTA_PER_CARD;
-      if (Math.sign(accumRef.current) !== Math.sign(delta) && accumRef.current !== 0) {
-        accumRef.current = 0;
-      }
-
-      const next = Math.max(0, Math.min(LAST, i + steps));
+      const next = Math.max(0, Math.min(LAST, i + dir));
       if (next === i) {
         accumRef.current = 0;
         return false;
@@ -223,6 +222,8 @@ const Skills: React.FC = () => {
     }
     activeRef.current = i;
     setActive(i);
+    accumRef.current = 0;
+    coolUntilRef.current = 0;
   };
 
   return (

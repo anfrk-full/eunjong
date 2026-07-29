@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import ReactDOM from 'react-dom';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useInView } from '../hooks/useInView';
 import { usePage } from '../context/PageContext';
@@ -28,6 +27,7 @@ interface Project {
   role?: string;
   period?: string;
   members?: string;
+  accent: string;
   cases: CaseStudy[];
 }
 
@@ -38,7 +38,7 @@ const projectData: Project[] = [
     overview:
       '맞춤형 운동/식단 추천, 운동 크루 매칭, 종목별 커뮤니티를 제공하는 운동인 종합 플랫폼입니다. ' +
       '프론트엔드 개발을 담당하며 크루 매칭·이미지 업로드·배틀 현황 등 핵심 화면을 구현했습니다.',
-    category: 'Fullstack',
+    category: 'Frontend',
     tech: ['React', 'Spring Boot', 'MySQL', 'TypeScript'],
     github: 'https://github.com/maechu-egg/multicampus_maechu_back',
     video: 'https://www.youtube.com/watch?v=roMHHzFvCP4',
@@ -46,6 +46,7 @@ const projectData: Project[] = [
     role: '프론트 개발',
     period: '2024.09 – 2024.11',
     members: '7명',
+    accent: '#4f8cff',
     cases: [
       {
         title: '이미지 저장·관리 구조',
@@ -84,12 +85,13 @@ const projectData: Project[] = [
     overview:
       '비임상시험 업무의 편의성을 위해 개발한 시험관리 웹입니다. ' +
       '시험물질·일정·동물·QAU 업무까지 한 곳에서 관리할 수 있도록 풀스택으로 구현·유지보수하고 있습니다.',
-    category: 'Fullstack',
+    category: 'Frontend',
     tech: ['PHP', 'MySQL'],
     emoji: '⚗️',
     role: '풀스택 개발',
     period: '2025.01 – 현재',
     members: '1명',
+    accent: '#3ecf8e',
     cases: [
       {
         title: '시험 일정 입력 페이지',
@@ -148,6 +150,14 @@ const projectData: Project[] = [
 ];
 
 const CATEGORIES: Category[] = ['All', 'Frontend', 'Backend', 'Fullstack'];
+const DELTA_PER_STEP = 160;
+const STEP_COOLDOWN_MS = 420;
+
+const pickKeyPoint = (text: string) => {
+  const normalized = text.replace(/\s+/g, ' ').trim();
+  const sentences = normalized.split(/(?<=[.!?])\s+/).filter(Boolean);
+  return sentences[0] ?? normalized;
+};
 
 /* ─── 라이트박스 ─── */
 interface LightboxProps {
@@ -301,208 +311,118 @@ const CaseGallery: React.FC<{ images: string[]; label: string }> = ({ images, la
   );
 };
 
-/* ─── 모달 ─── */
-const ProjectModal: React.FC<{ project: Project; onClose: () => void }> = ({ project, onClose }) => {
-  useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    document.addEventListener('keydown', handleKey);
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.removeEventListener('keydown', handleKey);
-      document.body.style.overflow = '';
-    };
-  }, [onClose]);
-
-  return ReactDOM.createPortal(
-    <motion.div
-      className="modal-overlay"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.25 }}
-      onClick={onClose}
-    >
-      <motion.div
-        className="modal"
-        data-scroll-y
-        initial={{ opacity: 0, scale: 0.92, y: 30 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.92, y: 30 }}
-        transition={{ duration: 0.3, ease: 'easeOut' }}
-        onClick={(e) => e.stopPropagation()}
-        onWheel={(e) => e.stopPropagation()}
-      >
-        <button className="modal__close" onClick={onClose} aria-label="닫기">
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <path d="M18 6L6 18M6 6l12 12" />
-          </svg>
-        </button>
-
-        <div className="modal__header">
-          <span className="modal__category">{project.category}</span>
-          <h2 className="modal__title">{project.title}</h2>
-          <p className="modal__subtitle">{project.description}</p>
-        </div>
-
-        {(project.period || project.role || project.members) && (
-          <div className="modal__meta">
-            {project.period && (
-              <div className="modal__meta-item">
-                <span className="modal__meta-label">Period</span>
-                <span className="modal__meta-value">{project.period}</span>
-              </div>
-            )}
-            {project.role && (
-              <div className="modal__meta-item">
-                <span className="modal__meta-label">Role</span>
-                <span className="modal__meta-value">{project.role}</span>
-              </div>
-            )}
-            {project.members && (
-              <div className="modal__meta-item">
-                <span className="modal__meta-label">Team</span>
-                <span className="modal__meta-value">{project.members}</span>
-              </div>
-            )}
-          </div>
-        )}
-
-        <div className="modal__section">
-          <h3 className="modal__section-title">Overview</h3>
-          <p className="modal__desc">{project.overview}</p>
-        </div>
-
-        {project.cases.map((c) => (
-          <div key={c.title} className="modal__case">
-            {project.cases.length > 1 && <h3 className="modal__case-title">{c.title}</h3>}
-
-            <div className="modal__section">
-              <h4 className="modal__section-title">Problem</h4>
-              <p className="modal__desc">{c.problem}</p>
-            </div>
-
-            <div className="modal__section">
-              <h4 className="modal__section-title">Solution</h4>
-              <p className="modal__desc">{c.solution}</p>
-            </div>
-
-            <div className="modal__section">
-              <h4 className="modal__section-title">Result</h4>
-              <p className="modal__desc">{c.result}</p>
-              {c.images && c.images.length > 0 && (
-                <div className="modal__case-gallery">
-                  <CaseGallery images={c.images} label={c.title} />
-                </div>
-              )}
-            </div>
-          </div>
-        ))}
-
-        <div className="modal__section">
-          <h3 className="modal__section-title">Stack</h3>
-          <div className="modal__tech">
-            {project.tech.map((t) => (
-              <span key={t} className="modal__tech-tag">
-                {t}
-              </span>
-            ))}
-          </div>
-        </div>
-
-        <div className="modal__links">
-          {project.github && (
-            <a
-              href={project.github}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="modal__link-btn modal__link-btn--github"
-            >
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
-                <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z" />
-              </svg>
-              GitHub
-            </a>
-          )}
-          {project.demo && (
-            <a
-              href={project.demo}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="modal__link-btn modal__link-btn--demo"
-            >
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" />
-              </svg>
-              Live Demo
-            </a>
-          )}
-          {project.video && (
-            <a
-              href={project.video}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="modal__link-btn modal__link-btn--video"
-            >
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
-                <path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
-              </svg>
-              시연 영상
-            </a>
-          )}
-        </div>
-      </motion.div>
-    </motion.div>,
-    document.body
-  );
-};
-
 /* ─── 메인 ─── */
 const Projects: React.FC = () => {
   const { ref, inView } = useInView();
-  const { setLocked, pageId } = usePage();
+  const { pageId, setWheelConsumer } = usePage();
   const [activeCategory, setActiveCategory] = useState<Category>('All');
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-
-  useEffect(() => {
-    if (pageId !== 'projects') {
-      setSelectedProject(null);
-      setLocked(false);
-      return;
-    }
-    setLocked(!!selectedProject);
-    return () => setLocked(false);
-  }, [selectedProject, setLocked, pageId]);
+  const [activeIdx, setActiveIdx] = useState(0);
+  const activeIdxRef = useRef(0);
+  const filteredLenRef = useRef(0);
+  const accumRef = useRef(0);
+  const coolUntilRef = useRef(0);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   const filtered =
     activeCategory === 'All'
       ? projectData
       : projectData.filter((p) => p.category === activeCategory);
 
+  const safeIdx = filtered.length === 0 ? 0 : Math.min(activeIdx, filtered.length - 1);
+  const active = filtered[safeIdx] ?? null;
+  const shown = pageId === 'projects' && inView;
+
+  useEffect(() => {
+    activeIdxRef.current = safeIdx;
+  }, [safeIdx]);
+
+  useEffect(() => {
+    filteredLenRef.current = filtered.length;
+  }, [filtered.length]);
+
+  useEffect(() => {
+    setActiveIdx(0);
+    activeIdxRef.current = 0;
+    accumRef.current = 0;
+    coolUntilRef.current = 0;
+  }, [activeCategory]);
+
+  useEffect(() => {
+    if (pageId !== 'projects') return;
+
+    setWheelConsumer((delta) => {
+      const now = performance.now();
+      if (now < coolUntilRef.current) return true;
+
+      const last = filteredLenRef.current - 1;
+      if (last < 0) return false;
+
+      const i = activeIdxRef.current;
+
+      if (delta > 0 && i >= last) {
+        accumRef.current = 0;
+        return false;
+      }
+      if (delta < 0 && i <= 0) {
+        accumRef.current = 0;
+        return false;
+      }
+
+      accumRef.current += delta;
+      if (Math.abs(accumRef.current) < DELTA_PER_STEP) return true;
+
+      const dir = accumRef.current > 0 ? 1 : -1;
+      accumRef.current = 0;
+      coolUntilRef.current = now + STEP_COOLDOWN_MS;
+
+      const next = Math.max(0, Math.min(last, i + dir));
+      if (next === i) return false;
+
+      activeIdxRef.current = next;
+      setActiveIdx(next);
+      return true;
+    });
+
+    return () => setWheelConsumer(null);
+  }, [pageId, setWheelConsumer]);
+
+  const bindScrollRef = useCallback((el: HTMLDivElement | null) => {
+    scrollRef.current = el;
+    if (el) el.scrollTop = 0;
+  }, []);
+
+  const onRailClick = (i: number) => {
+    if (i === activeIdxRef.current) return;
+    activeIdxRef.current = i;
+    setActiveIdx(i);
+    accumRef.current = 0;
+    coolUntilRef.current = 0;
+  };
+
   return (
     <section id="projects" className="section projects">
-      <div className="container" ref={ref}>
+      <div className="container projects__container" ref={ref}>
         <motion.div
           className="section__header"
           initial={{ opacity: 0, y: 16 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.5 }}
+          animate={shown ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.35 }}
         >
           <span className="section__label">Projects</span>
           <h2 className="section__title">Selected work</h2>
-          <p className="section__subtitle">클릭하면 상세 내용을 볼 수 있습니다.</p>
+          <p className="section__subtitle">스크롤로 프로젝트를 넘기며 오른쪽에서 내용을 확인하세요.</p>
         </motion.div>
 
         <motion.div
           className="projects__filter"
           initial={{ opacity: 0, y: 10 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
+          animate={shown ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.4, delay: 0.05 }}
         >
           {CATEGORIES.map((cat) => (
             <button
               key={cat}
+              type="button"
               className={`projects__filter-btn ${activeCategory === cat ? 'projects__filter-btn--active' : ''}`}
               onClick={() => setActiveCategory(cat)}
             >
@@ -511,42 +431,192 @@ const Projects: React.FC = () => {
           ))}
         </motion.div>
 
-        <div className="projects__grid">
-          <AnimatePresence mode="popLayout">
-            {filtered.map((project, idx) => (
-              <motion.button
-                key={project.title}
-                type="button"
-                className="project-card"
-                layout
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: 0.3, delay: idx * 0.04 }}
-                onClick={() => setSelectedProject(project)}
-              >
-                <div className="project-card__top">
-                  <span className="project-card__cat">{project.category}</span>
-                  <span className="project-card__arrow">→</span>
-                </div>
-                <h3 className="project-card__title">{project.title}</h3>
-                <p className="project-card__desc">{project.description}</p>
-                <div className="project-card__tech">
-                  {project.tech.slice(0, 4).map((t) => (
-                    <span key={t}>{t}</span>
-                  ))}
-                </div>
-              </motion.button>
-            ))}
-          </AnimatePresence>
+        <div className="projects__stage">
+          {filtered.length === 0 ? (
+            <p className="projects__empty">해당 카테고리의 프로젝트가 없습니다.</p>
+          ) : (
+            <>
+              <nav className="projects__rail" aria-label="프로젝트 목록">
+                {filtered.map((project, i) => {
+                  const isActive = i === safeIdx;
+                  return (
+                    <button
+                      key={project.title}
+                      type="button"
+                      className={`projects__rail-item${isActive ? ' projects__rail-item--active' : ''}`}
+                      style={{ '--proj-accent': project.accent } as React.CSSProperties}
+                      onClick={() => onRailClick(i)}
+                      aria-current={isActive ? 'true' : undefined}
+                    >
+                      <span className="projects__rail-index" aria-hidden="true">
+                        {String(i + 1).padStart(2, '0')}
+                      </span>
+                      <span className="projects__rail-body">
+                        <span className="projects__rail-title">{project.title}</span>
+                        <span className="projects__rail-cat">{project.category}</span>
+                      </span>
+                      <span className="projects__rail-mark" aria-hidden="true" />
+                    </button>
+                  );
+                })}
+              </nav>
+
+              <div className="projects__feature-wrap" aria-live="polite">
+                <AnimatePresence mode="wait">
+                  {active && (
+                    <motion.article
+                      key={active.title}
+                      className="projects__feature"
+                      style={{ '--proj-accent': active.accent } as React.CSSProperties}
+                      initial={{ opacity: 0, y: 18 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -12 }}
+                      transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                      data-scroll-y
+                      ref={bindScrollRef}
+                    >
+                      <span className="projects__feature-glow" aria-hidden="true" />
+
+                      <div className="projects__feature-top">
+                        <span className="projects__feature-cat">{active.category}</span>
+                        <span className="projects__feature-index" aria-hidden="true">
+                          {String(safeIdx + 1).padStart(2, '0')}
+                          <span className="projects__feature-index-sep">/</span>
+                          {String(filtered.length).padStart(2, '0')}
+                        </span>
+                      </div>
+
+                      <h3 className="projects__feature-title">{active.title}</h3>
+                      <p className="projects__feature-desc">{active.description}</p>
+
+                      <div className="projects__feature-meta">
+                        {active.period && (
+                          <div className="projects__feature-meta-item">
+                            <span className="projects__feature-meta-label">Period</span>
+                            <span className="projects__feature-meta-value">{active.period}</span>
+                          </div>
+                        )}
+                        {active.role && (
+                          <div className="projects__feature-meta-item">
+                            <span className="projects__feature-meta-label">Role</span>
+                            <span className="projects__feature-meta-value">{active.role}</span>
+                          </div>
+                        )}
+                        {active.members && (
+                          <div className="projects__feature-meta-item">
+                            <span className="projects__feature-meta-label">Team</span>
+                            <span className="projects__feature-meta-value">{active.members}</span>
+                          </div>
+                        )}
+                        <div className="projects__feature-meta-item">
+                          <span className="projects__feature-meta-label">Cases</span>
+                          <span className="projects__feature-meta-value">{active.cases.length}</span>
+                        </div>
+                      </div>
+
+                      <div className="projects__body">
+                        <section className="projects__section">
+                          <h4 className="projects__section-title">Overview</h4>
+                          <p className="projects__section-text">{active.overview}</p>
+                        </section>
+
+                        {active.cases.map((c) => (
+                          <section key={c.title} className="projects__case">
+                            {active.cases.length > 1 && (
+                              <h4 className="projects__case-title">{c.title}</h4>
+                            )}
+                            <div className="projects__section">
+                              <h5 className="projects__section-title">Problem</h5>
+                              <p className="projects__section-text">{c.problem}</p>
+                              <p className="projects__section-text projects__section-text--emphasis">
+                                <strong>중요 문제점:</strong> {pickKeyPoint(c.problem)}
+                              </p>
+                            </div>
+                            <div className="projects__section">
+                              <h5 className="projects__section-title">Solution</h5>
+                              <p className="projects__section-text">{c.solution}</p>
+                              <p className="projects__section-text projects__section-text--emphasis">
+                                <strong>중요 해결점:</strong> {pickKeyPoint(c.solution)}
+                              </p>
+                            </div>
+                            <div className="projects__section">
+                              <h5 className="projects__section-title">Result</h5>
+                              <p className="projects__section-text">{c.result}</p>
+                              <p className="projects__section-text projects__section-text--emphasis">
+                                <strong>최종 결론:</strong> {pickKeyPoint(c.result)}
+                              </p>
+                              {c.images && c.images.length > 0 && (
+                                <div className="projects__case-gallery">
+                                  <CaseGallery images={c.images} label={c.title} />
+                                </div>
+                              )}
+                            </div>
+                          </section>
+                        ))}
+
+                        <section className="projects__section">
+                          <h4 className="projects__section-title">Stack</h4>
+                          <div className="projects__feature-tech">
+                            {active.tech.map((t) => (
+                              <span key={t}>{t}</span>
+                            ))}
+                          </div>
+                        </section>
+
+                        {(active.github || active.demo || active.video) && (
+                          <div className="projects__links">
+                            {active.github && (
+                              <a
+                                href={active.github}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="projects__link"
+                              >
+                                GitHub
+                              </a>
+                            )}
+                            {active.demo && (
+                              <a
+                                href={active.demo}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="projects__link"
+                              >
+                                Live Demo
+                              </a>
+                            )}
+                            {active.video && (
+                              <a
+                                href={active.video}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="projects__link"
+                              >
+                                시연 영상
+                              </a>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </motion.article>
+                  )}
+                </AnimatePresence>
+
+                {filtered.length > 1 && (
+                  <div className="projects__progress" aria-hidden="true">
+                    {filtered.map((p, i) => (
+                      <span
+                        key={p.title}
+                        className={`projects__progress-dot${i === safeIdx ? ' projects__progress-dot--active' : ''}`}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
         </div>
       </div>
-
-      <AnimatePresence>
-        {selectedProject && (
-          <ProjectModal project={selectedProject} onClose={() => setSelectedProject(null)} />
-        )}
-      </AnimatePresence>
     </section>
   );
 };

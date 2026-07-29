@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+﻿import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { usePage } from '../context/PageContext';
 
@@ -445,7 +445,7 @@ const Hero: React.FC = () => {
         <h1 className="hero__title">Kang Eunjong</h1>
 
         <p className="hero__lead">
-          비를 가리듯, 화면의 경험을 다듬습니다.
+          비를 가리듯, 화면의 경험을 특별하게 만듭니다.
         </p>
 
         <div className="hero__actions">

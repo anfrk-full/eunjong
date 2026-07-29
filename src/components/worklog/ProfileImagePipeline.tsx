@@ -1,13 +1,15 @@
 import React from 'react';
 
-/** 회원 프로필 이미지 업로드·조회 파이프라인 케이스 스터디 본문 */
+/** 회원 프로필 이미지 업로드·조회 파이프라인 */
 const ProfileImagePipeline: React.FC = () => {
   return (
     <>
       <div className="cs__block">
         <h3 className="cs__h2">Problem</h3>
         <p className="cs__text">
-          이미지가 저장이 안되거나 저장이 되었는데 보이지 않는 문제가 발생했습니다.
+          이미지가 저장되지 않거나, 저장됐는데도 화면에 보이지 않는 문제가
+          발생했습니다. 업로드·DB·조회·표시 책임이 섞여 실패 지점을 찾기
+          어려웠습니다.
         </p>
         <div className="cs__table-wrap">
           <table className="cs__table">
@@ -45,51 +47,33 @@ const ProfileImagePipeline: React.FC = () => {
       </div>
 
       <div className="cs__block">
-        <h3 className="cs__h2">Design Principle</h3>
-        <p className="cs__caption">
-          레이어별 책임을 나누는 것이 이 파이프라인의 핵심입니다.
-        </p>
+        <h3 className="cs__h2">Approach</h3>
+        <p className="cs__caption">레이어별 책임을 나눠 업로드·저장·조회·표시를 분리했습니다.</p>
         <div className="cs__card">
+          <div className="cs__flow">
+            <span className="cs__pill cs__pill--info">Disk: 바이너리</span>
+            <span className="cs__flow-arrow">→</span>
+            <span className="cs__pill cs__pill--info">DB: 파일명</span>
+            <span className="cs__flow-arrow">→</span>
+            <span className="cs__pill cs__pill--info">API: path</span>
+            <span className="cs__flow-arrow">→</span>
+            <span className="cs__pill cs__pill--info">FE: origin + path</span>
+          </div>
+          <hr className="cs__divider cs__divider--soft" />
           <ul className="cs__list">
             <li>
-              <strong>Controller</strong> — DTO(메타) + MultipartFile(파일) 분리
-              수신
+              <strong>Controller</strong> — DTO(메타) + MultipartFile(파일) 분리 수신
             </li>
             <li>
-              <strong>Service</strong> — 고유 파일명 생성 → static 저장 → DTO에
-              파일명 set → DB 저장
+              <strong>Service</strong> — 고유 파일명 생성 → static 저장 → DB에는 파일명만
             </li>
             <li>
-              <strong>API Read</strong> — DB 파일명 + &quot;/static/&quot; prefix → 응답
-              path
+              <strong>API Read</strong> — DB 파일명 + <code>/static/</code> prefix
             </li>
             <li>
-              <strong>Frontend</strong> — BASE_URL + path → {'<img src>'}
+              <strong>Frontend</strong> — BASE_URL + path로 이미지 표시
             </li>
           </ul>
-          <hr className="cs__divider cs__divider--soft" />
-          <div className="cs__grid-2">
-            <div>
-              <h4 className="cs__h3">핵심 경계</h4>
-              <div className="cs__flow">
-                <span className="cs__pill cs__pill--info">Disk: 바이너리</span>
-                <span className="cs__flow-arrow">·</span>
-                <span className="cs__pill cs__pill--info">DB: 파일명</span>
-                <span className="cs__flow-arrow">·</span>
-                <span className="cs__pill cs__pill--info">API: path</span>
-                <span className="cs__flow-arrow">·</span>
-                <span className="cs__pill cs__pill--info">FE: origin + path</span>
-              </div>
-            </div>
-            <div>
-              <h4 className="cs__h3">Why split</h4>
-              <p className="cs__small">
-                환경(로컬/서버/CDN)이 바뀌어도 DB는 건드리지 않고 prefix만
-                바꾸면 됩니다. 업로드·조회·표시 실패 지점도 레이어별로
-                분리됩니다.
-              </p>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -98,49 +82,42 @@ const ProfileImagePipeline: React.FC = () => {
         <div className="cs__grid-2">
           <div className="cs__card">
             <div className="cs__card-head">
-              1) Upload — Controller
+              Upload — Controller
               <span className="cs__pill cs__pill--ok">Spring</span>
             </div>
             <p className="cs__small">
-              DTO에 MultipartFile을 두지 않고, 컨트롤러에서 따로 받아 서비스로
-              전달합니다. DTO에는 이미지 이름(`member_img`)만 둡니다.
+              DTO에 MultipartFile을 두지 않고 컨트롤러에서 따로 받아 서비스로 전달합니다.
             </p>
             <pre className="cs__code">{`@PostMapping("/register")
 public ResponseEntity<String> registerUser(
-    @ModelAttribute UserRequestDTO userRequestDTO,
+    @ModelAttribute UserRequestDTO dto,
     @RequestParam(value = "memberImgFile", required = false)
         MultipartFile memberImgFile) {
-  return loginServiceImple.registerUser(
-      userRequestDTO, memberImgFile);
+  return loginService.registerUser(dto, memberImgFile);
 }`}</pre>
           </div>
-
           <div className="cs__card">
             <div className="cs__card-head">
-              2) Upload — Service
-              <span className="cs__pill cs__pill--ok">Static store</span>
+              Upload — Service
+              <span className="cs__pill cs__pill--ok">Store</span>
             </div>
             <p className="cs__small">
-              `currentTimeMillis + 원본파일명`으로 중복을 막고, static 폴더에
-              저장한 뒤 DB 저장 전 DTO에 파일명만 set합니다.
+              timestamp + 원본명으로 중복을 막고, static에 저장한 뒤 DB에는 파일명만 set합니다.
             </p>
             <pre className="cs__code">{`String fileName = System.currentTimeMillis()
-    + "_" + memberImgFile.getOriginalFilename();
-Path path = Paths.get(
-    "src/main/resources/static/" + fileName);
-Files.copy(memberImgFile.getInputStream(), path,
+    + "_" + file.getOriginalFilename();
+Files.copy(file.getInputStream(),
+    Paths.get("static/" + fileName),
     StandardCopyOption.REPLACE_EXISTING);
-userRequestDTO.setMember_img(fileName);`}</pre>
+dto.setMember_img(fileName);`}</pre>
           </div>
-
           <div className="cs__card">
             <div className="cs__card-head">
-              3) Read — Controller / Service
-              <span className="cs__pill cs__pill--ok">JWT</span>
+              Read — API
+              <span className="cs__pill cs__pill--ok">Path</span>
             </div>
             <p className="cs__small">
-              JWT에서 userId를 뽑아 조회하고, DB 파일명에 `/static/`을 붙여
-              응답합니다. 예: `1719..._photo.jpg` → `/static/1719..._photo.jpg`
+              JWT userId로 조회 후 DB 파일명에 <code>/static/</code>을 붙여 응답합니다.
             </p>
             <pre className="cs__code">{`user.setMemberImg(getImageUrl(user.getMemberImg()));
 
@@ -148,22 +125,45 @@ private String getImageUrl(String memberImg) {
   return "/static/" + memberImg;
 }`}</pre>
           </div>
-
           <div className="cs__card">
             <div className="cs__card-head">
-              4) Frontend — React
-              <span className="cs__pill cs__pill--ok">Origin join</span>
+              Frontend — Origin
+              <span className="cs__pill cs__pill--ok">React</span>
             </div>
             <p className="cs__small">
-              FE(3000)와 BE(8001) origin이 다르므로, 응답 path만으로는 부족하고
-              서버 BASE_URL 결합이 필요합니다.
+              FE와 BE origin이 다르므로 응답 path에 서버 BASE_URL을 결합합니다.
             </p>
             <pre className="cs__code">{`const BASE_URL = "http://localhost:8001";
 <img src={\`\${BASE_URL}\${userInfo.memberImg}\`}
-     alt="Profile" />
-// => http://localhost:8001/static/1719..._photo.jpg`}</pre>
+     alt="Profile" />`}</pre>
           </div>
         </div>
+      </div>
+
+      <div className="cs__block">
+        <h3 className="cs__h2">Outcome</h3>
+        <div className="cs__stats">
+          <div className="cs__stat">
+            <span className="cs__stat-value">4 layers</span>
+            <span className="cs__stat-label">Disk · DB · API · FE</span>
+          </div>
+          <div className="cs__stat">
+            <span className="cs__stat-value">Filename</span>
+            <span className="cs__stat-label">DB 저장 전략</span>
+          </div>
+          <div className="cs__stat">
+            <span className="cs__stat-value">Unique</span>
+            <span className="cs__stat-label">timestamp prefix</span>
+          </div>
+          <div className="cs__stat">
+            <span className="cs__stat-value">Stable</span>
+            <span className="cs__stat-label">환경 변경에 강한 조회</span>
+          </div>
+        </div>
+        <p className="cs__text">
+          환경(로컬/서버)이 바뀌어도 DB는 건드리지 않고 prefix만 바꾸면 됩니다.
+          실패 지점도 레이어별로 분리되어 디버깅 비용이 줄었습니다.
+        </p>
       </div>
     </>
   );

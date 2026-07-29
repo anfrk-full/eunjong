@@ -51,7 +51,7 @@ const WHEEL_COOLDOWN_MS = 700;
 const SWIPE_THRESHOLD = 50;
 
 const SCROLL_Y_SELECTOR =
-  '[data-scroll-y], .modal, .wl__detail-scroll, .lightbox-overlay, .skills__expand';
+  '[data-scroll-y], .modal, .wl__feature, .projects__feature, .lightbox-overlay, .skills__expand';
 
 function isScrollableY(el: HTMLElement): boolean {
   const style = window.getComputedStyle(el);
@@ -69,7 +69,7 @@ function findVerticalScroller(start: HTMLElement | null): HTMLElement | null {
   if (marked) {
     if (isScrollableY(marked)) return marked;
     const nested = marked.querySelector<HTMLElement>(
-      '[data-scroll-y], .modal, .wl__detail-scroll'
+      '[data-scroll-y], .modal, .wl__feature, .projects__feature'
     );
     if (nested && isScrollableY(nested)) return nested;
     if (marked.scrollHeight >= marked.clientHeight) return marked;

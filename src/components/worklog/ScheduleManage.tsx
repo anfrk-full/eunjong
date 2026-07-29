@@ -1,6 +1,6 @@
 import React from 'react';
 
-/** 시험 일정 통합 대시보드 케이스 스터디 본문 */
+/** 시험 일정 통합 대시보드 */
 const ScheduleManage: React.FC = () => {
   return (
     <>
@@ -8,9 +8,8 @@ const ScheduleManage: React.FC = () => {
         <h3 className="cs__h2">Problem</h3>
         <p className="cs__text">
           시험 정보는 study_1, 일정은 study_3, 문서는 파일 경로에 흩어져
-          있었습니다. 관리자가 “특정 SD/부서/시험계의 시험 → 현재 일정 상태”
-          를 보려면 여러 화면을 오가야 했고, 취소 시험·진행률을 한눈에 보기
-          어려웠습니다.
+          있었습니다. 특정 SD/부서/시험계의 시험과 일정 상태를 보려면 여러
+          화면을 오가야 했고, 취소 시험·진행률을 한눈에 보기 어려웠습니다.
         </p>
         <div className="cs__table-wrap">
           <table className="cs__table">
@@ -34,7 +33,7 @@ const ScheduleManage: React.FC = () => {
               </tr>
               <tr>
                 <td>일정 상태 파악이 수동</td>
-                <td>오늘 기준 완료/진행/예정 + Progress Bar</td>
+                <td>오늘 기준 완료/진행/예정 + Progress</td>
                 <td>진행률 즉시 인지</td>
               </tr>
               <tr>
@@ -48,33 +47,11 @@ const ScheduleManage: React.FC = () => {
       </div>
 
       <div className="cs__block">
-        <h3 className="cs__h2">UI Architecture</h3>
+        <h3 className="cs__h2">Approach</h3>
         <p className="cs__caption">
-          HTML은 레이아웃 골격만 두고, 데이터·렌더는 JS가 채우는 구조입니다.
+          HTML은 레이아웃 골격만 두고, 데이터·렌더는 JS가 채우는 구조로 설계했습니다.
         </p>
         <div className="cs__card">
-          <div className="cs__grid-3">
-            <div>
-              <h4 className="cs__h3">Row 1 · Drill-down</h4>
-              <p className="cs__small">
-                Col1: 검색 축 선택 → Col2: 축 값 목록 → Col3: 시험번호 목록 (+
-                sticky search)
-              </p>
-            </div>
-            <div>
-              <h4 className="cs__h3">Row 2 · Progress</h4>
-              <p className="cs__small">
-                일정 상태 비율 stacked progress (완료 / 진행 중 / 예정)
-              </p>
-            </div>
-            <div>
-              <h4 className="cs__h3">Row 3 · Detail</h4>
-              <p className="cs__small">
-                좌: 시험 메타·문서 링크 · 우: 일정 카드 타임라인
-              </p>
-            </div>
-          </div>
-          <hr className="cs__divider cs__divider--soft" />
           <div className="cs__flow">
             <span className="cs__pill cs__pill--info">Dimension</span>
             <span className="cs__flow-arrow">→</span>
@@ -84,14 +61,25 @@ const ScheduleManage: React.FC = () => {
             <span className="cs__flow-arrow">→</span>
             <span className="cs__pill cs__pill--info">Parallel fetch</span>
             <span className="cs__flow-arrow">→</span>
-            <span className="cs__pill cs__pill--info">Detail + Timeline + Progress</span>
+            <span className="cs__pill cs__pill--info">Detail + Timeline</span>
+          </div>
+          <hr className="cs__divider cs__divider--soft" />
+          <div className="cs__grid-3">
+            <div>
+              <h4 className="cs__h3">Row 1 · Drill-down</h4>
+              <p className="cs__small">검색 축 → 축 값 목록 → 시험번호 목록</p>
+            </div>
+            <div>
+              <h4 className="cs__h3">Row 2 · Progress</h4>
+              <p className="cs__small">완료 / 진행 중 / 예정 stacked progress</p>
+            </div>
+            <div>
+              <h4 className="cs__h3">Row 3 · Detail</h4>
+              <p className="cs__small">메타·문서 링크 + 일정 카드 타임라인</p>
+            </div>
           </div>
         </div>
-      </div>
-
-      <div className="cs__block">
-        <h3 className="cs__h2">Data Flow</h3>
-        <div className="cs__table-wrap">
+        <div className="cs__table-wrap" style={{ marginTop: 12 }}>
           <table className="cs__table">
             <thead>
               <tr>
@@ -104,7 +92,7 @@ const ScheduleManage: React.FC = () => {
               <tr>
                 <td>fetchData(dim)</td>
                 <td>fetch_data.php</td>
-                <td>축별 DISTINCT 값 또는 전체 시험번호</td>
+                <td>축별 DISTINCT 값 / 전체 시험번호</td>
               </tr>
               <tr>
                 <td>fetchData2(dim, value)</td>
@@ -113,24 +101,16 @@ const ScheduleManage: React.FC = () => {
               </tr>
               <tr>
                 <td>fetchData3(NO)</td>
-                <td>fetch_data_4.php + fetch_data_3.php</td>
-                <td>시험 상세(study_1)와 일정(study_3) 병렬 로드</td>
+                <td>fetch_data_3/4.php</td>
+                <td>상세 + 일정 병렬 로드</td>
               </tr>
             </tbody>
           </table>
         </div>
-        <div className="cs__callout cs__callout--info">
-          <strong>병렬 로딩 패턴</strong>
-          <p>
-            시험 선택 시 상세 API와 일정 API를 동시에 호출합니다. 화면은
-            메타정보 패널과 일정 패널을 독립 갱신해, 한쪽 지연이 전체 UI를
-            막지 않도록 했습니다.
-          </p>
-        </div>
       </div>
 
       <div className="cs__block">
-        <h3 className="cs__h2">Implementation Highlights</h3>
+        <h3 className="cs__h2">Implementation</h3>
         <div className="cs__grid-2">
           <div className="cs__card">
             <div className="cs__card-head">
@@ -138,9 +118,8 @@ const ScheduleManage: React.FC = () => {
               <span className="cs__pill cs__pill--ok">UX</span>
             </div>
             <p className="cs__small">
-              시험책임자·부서·시험항목·시험계·의뢰자·QAU·시험물질·시험번호
-              8축으로 진입. 값 목록/시험목록은 클라이언트 검색 + 결과 수
-              배지로 즉시 좁힙니다.
+              SD·부서·시험항목·시험계·의뢰자·QAU·시험물질·시험번호 8축으로 진입하고
+              클라이언트 검색으로 즉시 좁힙니다.
             </p>
             <pre className="cs__code">{`fetchData('sd_name')
 → fetchData2(key, value)
@@ -148,16 +127,15 @@ const ScheduleManage: React.FC = () => {
           </div>
           <div className="cs__card">
             <div className="cs__card-head">
-              Date-based schedule states
+              Date-based states
               <span className="cs__pill cs__pill--ok">Status</span>
             </div>
             <p className="cs__small">
-              오늘 날짜 기준으로 일정 카드를 분류하고, 같은 카운트로 stacked
-              progress bar를 구성합니다.
+              오늘 날짜 기준으로 일정 카드를 분류하고, 같은 카운트로 progress bar를 구성합니다.
             </p>
-            <pre className="cs__code">{`date < today  → 완료 (success)
-date == today → 진행 중 (info)
-date > today  → 예정 (danger)`}</pre>
+            <pre className="cs__code">{`date < today  → 완료
+date == today → 진행 중
+date > today  → 예정`}</pre>
           </div>
           <div className="cs__card">
             <div className="cs__card-head">
@@ -165,22 +143,48 @@ date > today  → 예정 (danger)`}</pre>
               <span className="cs__pill cs__pill--ok">Domain</span>
             </div>
             <p className="cs__small">
-              DB 코드값(gov_no, category 약칭)을 운영 명칭으로 매핑. GLP/NON-GLP,
-              시설, 부처 라벨을 헤더에 묶어 “한 줄 요약 카드”로 만듭니다. 취소일은
-              도장형 오버레이로 강조합니다.
+              DB 코드값을 운영 명칭으로 매핑하고, 취소일은 도장형 오버레이로 강조합니다.
             </p>
           </div>
           <div className="cs__card">
             <div className="cs__card-head">
-              Shell + behavior split
+              Shell + behavior
               <span className="cs__pill cs__pill--ok">Structure</span>
             </div>
             <p className="cs__small">
-              HTML은 col/row 컨테이너만, CSS는 viewport 기반 스크롤 패널, JS는
-              AJAX·렌더·필터를 담당. 레거시 CMS 페이지에 embed 가능한 형태로
-              유지했습니다.
+              HTML은 컨테이너만, JS는 AJAX·렌더·필터를 담당해 레거시 CMS에
+              embed 가능한 형태로 유지했습니다.
             </p>
           </div>
+        </div>
+      </div>
+
+      <div className="cs__block">
+        <h3 className="cs__h2">Outcome</h3>
+        <div className="cs__stats">
+          <div className="cs__stat">
+            <span className="cs__stat-value">3-step</span>
+            <span className="cs__stat-label">드릴다운</span>
+          </div>
+          <div className="cs__stat">
+            <span className="cs__stat-value">8 dims</span>
+            <span className="cs__stat-label">검색 축</span>
+          </div>
+          <div className="cs__stat">
+            <span className="cs__stat-value">Parallel</span>
+            <span className="cs__stat-label">상세·일정 동시 로드</span>
+          </div>
+          <div className="cs__stat">
+            <span className="cs__stat-value">One view</span>
+            <span className="cs__stat-label">진행률 즉시 파악</span>
+          </div>
+        </div>
+        <div className="cs__callout cs__callout--info">
+          <strong>병렬 로딩 패턴</strong>
+          <p>
+            시험 선택 시 상세 API와 일정 API를 동시에 호출합니다. 한쪽 지연이
+            전체 UI를 막지 않도록 패널을 독립 갱신했습니다.
+          </p>
         </div>
       </div>
     </>

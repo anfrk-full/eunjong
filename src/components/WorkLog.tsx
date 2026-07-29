@@ -20,6 +20,7 @@ interface WorkCase {
   summary: string;
   tags: string[];
   stats: WorkCaseStat[];
+  accent: string;
   Content: React.FC;
 }
 
@@ -37,6 +38,7 @@ const workCases: WorkCase[] = [
       { value: 'Timestamp', label: 'unique prefix' },
       { value: 'BASE_URL', label: 'FE origin 결합' },
     ],
+    accent: '#4f8cff',
     Content: ProfileImagePipeline,
   },
   {
@@ -52,6 +54,7 @@ const workCases: WorkCase[] = [
       { value: '2 paths', label: '목록 + 케이지맵' },
       { value: 'Same UX', label: '회귀 없이 개선' },
     ],
+    accent: '#f59e0b',
     Content: AniControlQueryOptimization,
   },
   {
@@ -67,6 +70,7 @@ const workCases: WorkCase[] = [
       { value: 'Progress', label: '상태 시각화' },
       { value: 'Shell', label: '관심사 분리' },
     ],
+    accent: '#3ecf8e',
     Content: ScheduleManage,
   },
   {
@@ -82,12 +86,13 @@ const workCases: WorkCase[] = [
       { value: 'Cascade', label: '종속 선택' },
       { value: 'Excel', label: '리포트' },
     ],
+    accent: '#14b8a6',
     Content: QauDetailError,
   },
   {
     id: 'change-record-append',
     date: '2025',
-    title: '변경기록지 다중 첨부 — Append',
+    title: '변경기록지 다중 첨부',
     summary:
       '덮어쓰기에서 누적 추가로 전환. 레거시 스키마 제약 안에서 무결성·파일명·권한 삭제를 설계했습니다.',
     tags: ['Case Study', 'PHP / MySQL', 'Legacy', 'File Upload'],
@@ -97,132 +102,150 @@ const workCases: WorkCase[] = [
       { value: 'Whitelist', label: '삭제 검증' },
       { value: 'Zero DT', label: '스키마 보정' },
     ],
+    accent: '#fb7185',
     Content: ChangeRecordAppend,
   },
 ];
 
-const CARD_GAP = 10;
-const CARD_FALLBACK_H = 160;
-/** 카드 내용이 이 비율 미만으로만 보이면(≒ 40% 이상 비가시) 해당 행은 페이지에 넣지 않음 */
-const MIN_VISIBLE_RATIO = 0.6;
-
-function fitRows(gridH: number, cardH: number, gap: number): number {
-  if (gridH < 40 || cardH <= 0) return 1;
-  // 마지막 행은 cardH * MIN_VISIBLE_RATIO 만 확보되면 허용
-  const rows =
-    Math.floor((gridH + gap - cardH * MIN_VISIBLE_RATIO) / (cardH + gap)) + 1;
-  return Math.max(1, rows);
-}
+const DELTA_PER_STEP = 160;
+const STEP_COOLDOWN_MS = 420;
+const LAST = workCases.length - 1;
 
 const WorkLog: React.FC = () => {
   const { ref, inView } = useInView();
-  const { setLocked, pageId } = usePage();
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [listPage, setListPage] = useState(0);
-  const [pageSize, setPageSize] = useState(workCases.length);
+  const { pageId, setWheelConsumer } = usePage();
+  const [activeIdx, setActiveIdx] = useState(0);
+  const activeIdxRef = useRef(0);
+  const accumRef = useRef(0);
+  const coolUntilRef = useRef(0);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const gridRef = useRef<HTMLDivElement>(null);
+  const prevPageRef = useRef(pageId);
 
-  const selected = workCases.find((c) => c.id === selectedId) ?? null;
-  const listPageCount = Math.max(1, Math.ceil(workCases.length / pageSize));
-  const safePage = Math.min(listPage, listPageCount - 1);
-  const listSlice = workCases.slice(
-    safePage * pageSize,
-    safePage * pageSize + pageSize
-  );
+  const active = workCases[activeIdx];
+  const shown = pageId === 'worklog' && inView;
 
   useEffect(() => {
-    if (pageId !== 'worklog') {
-      setSelectedId(null);
-      setLocked(false);
-      return;
+    activeIdxRef.current = activeIdx;
+  }, [activeIdx]);
+
+  useEffect(() => {
+    if (pageId === 'worklog' && prevPageRef.current !== 'worklog') {
+      setActiveIdx(0);
+      activeIdxRef.current = 0;
+      accumRef.current = 0;
+      coolUntilRef.current = 0;
     }
-    setLocked(!!selectedId);
-    return () => setLocked(false);
-  }, [selectedId, setLocked, pageId]);
+    prevPageRef.current = pageId;
+  }, [pageId]);
 
   useEffect(() => {
-    if (scrollRef.current) scrollRef.current.scrollTop = 0;
-  }, [selectedId]);
+    if (pageId !== 'worklog') return;
 
-  useEffect(() => {
-    if (selectedId) return;
-    const el = gridRef.current;
-    if (!el) return;
+    setWheelConsumer((delta) => {
+      const now = performance.now();
+      if (now < coolUntilRef.current) return true;
 
-    const measure = () => {
-      const cols = window.matchMedia('(max-width: 900px)').matches ? 1 : 2;
-      const h = el.clientHeight;
-      if (h < 40) return;
+      const i = activeIdxRef.current;
 
-      const cardEls = el.querySelectorAll<HTMLElement>('.wl__card');
-      let cardH = CARD_FALLBACK_H;
-      if (cardEls.length > 0) {
-        cardH = Math.max(
-          ...Array.from(cardEls).map((c) => Math.max(c.offsetHeight, c.scrollHeight))
-        );
+      if (delta > 0 && i >= LAST) {
+        accumRef.current = 0;
+        return false;
+      }
+      if (delta < 0 && i <= 0) {
+        accumRef.current = 0;
+        return false;
       }
 
-      const rows = fitRows(h, cardH, CARD_GAP);
-      const nextSize = Math.min(workCases.length, Math.max(cols, rows * cols));
-      setPageSize((prev) => (prev === nextSize ? prev : nextSize));
-      setListPage((p) => {
-        const maxPage = Math.max(0, Math.ceil(workCases.length / nextSize) - 1);
-        return Math.min(p, maxPage);
-      });
-    };
+      accumRef.current += delta;
+      if (Math.abs(accumRef.current) < DELTA_PER_STEP) return true;
 
-    measure();
-    const rafMeasure = () => requestAnimationFrame(measure);
-    const ro = new ResizeObserver(rafMeasure);
-    ro.observe(el);
-    window.addEventListener('resize', rafMeasure);
-    return () => {
-      ro.disconnect();
-      window.removeEventListener('resize', rafMeasure);
-    };
-  }, [selectedId, pageId]);
+      const dir = accumRef.current > 0 ? 1 : -1;
+      accumRef.current = 0;
+      coolUntilRef.current = now + STEP_COOLDOWN_MS;
 
-  const closeDetail = () => setSelectedId(null);
+      const next = Math.max(0, Math.min(LAST, i + dir));
+      if (next === i) return false;
+
+      activeIdxRef.current = next;
+      setActiveIdx(next);
+      return true;
+    });
+
+    return () => setWheelConsumer(null);
+  }, [pageId, setWheelConsumer]);
+
+  const onRailClick = (i: number) => {
+    if (i === activeIdxRef.current) return;
+    activeIdxRef.current = i;
+    setActiveIdx(i);
+    accumRef.current = 0;
+    coolUntilRef.current = 0;
+  };
+
+  const bindScrollRef = (el: HTMLDivElement | null) => {
+    scrollRef.current = el;
+    if (el) el.scrollTop = 0;
+  };
 
   return (
     <section id="worklog" className="section worklog">
-      <div className="container" ref={ref}>
-        <AnimatePresence mode="wait">
-          {!selected ? (
-            <motion.div
-              key="list"
-              className="wl__page"
-              initial={{ opacity: 0, y: 12 }}
-              animate={inView ? { opacity: 1, y: 0 } : { opacity: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.35 }}
-            >
-              <div className="section__header">
-                <span className="section__label">Work Log</span>
-                <h2 className="section__title">Case studies</h2>
-                <p className="section__subtitle">
-                  카드를 눌러 자세히 볼 수 있습니다.
-                </p>
-              </div>
+      <div className="container worklog__container" ref={ref}>
+        <motion.div
+          className="wl__browse"
+          initial={{ opacity: 0, y: 12 }}
+          animate={shown ? { opacity: 1, y: 0 } : { opacity: 0 }}
+          transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <div className="section__header">
+            <span className="section__label">Work Log</span>
+            <h2 className="section__title">Case studies</h2>
+            <p className="section__subtitle">스크롤로 케이스를 넘기며 오른쪽에서 내용을 확인하세요.</p>
+          </div>
 
-              <div className="wl__grid" ref={gridRef}>
-                {listSlice.map((item, idx) => (
-                  <motion.button
+          <div className="wl__stage">
+            <nav className="wl__rail" aria-label="케이스 목록">
+              {workCases.map((item, i) => {
+                const isActive = i === activeIdx;
+                return (
+                  <button
                     key={item.id}
                     type="button"
-                    className="wl__card wl__card--compact"
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={inView ? { opacity: 1, y: 0 } : {}}
-                    transition={{ duration: 0.3, delay: idx * 0.04 }}
-                    onClick={() => setSelectedId(item.id)}
+                    className={`wl__rail-item${isActive ? ' wl__rail-item--active' : ''}`}
+                    style={{ '--wl-accent': item.accent } as React.CSSProperties}
+                    onClick={() => onRailClick(i)}
+                    aria-current={isActive ? 'true' : undefined}
                   >
-                    <div className="wl__card-top">
-                      <span className="wl__date">{item.date}</span>
-                      <span className="wl__card-cta">Read →</span>
-                    </div>
-                    <div className="wl__card-pills">
-                      {item.tags.slice(0, 2).map((tag, i) => (
+                    <span className="wl__rail-index" aria-hidden="true">
+                      {String(i + 1).padStart(2, '0')}
+                    </span>
+                    <span className="wl__rail-body">
+                      <span className="wl__rail-date">{item.date}</span>
+                      <span className="wl__rail-title">{item.title}</span>
+                    </span>
+                    <span className="wl__rail-mark" aria-hidden="true" />
+                  </button>
+                );
+              })}
+            </nav>
+
+            <div className="wl__feature-wrap" aria-live="polite">
+              <AnimatePresence mode="wait">
+                <motion.article
+                  key={active.id}
+                  className="wl__feature"
+                  style={{ '--wl-accent': active.accent } as React.CSSProperties}
+                  initial={{ opacity: 0, y: 18 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -12 }}
+                  transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                  data-scroll-y
+                  ref={bindScrollRef}
+                >
+                  <span className="wl__feature-glow" aria-hidden="true" />
+
+                  <div className="wl__feature-top">
+                    <div className="wl__feature-pills">
+                      {active.tags.map((tag, i) => (
                         <span
                           key={tag}
                           className={`cs__pill ${i === 0 ? 'cs__pill--info' : ''}`}
@@ -231,93 +254,45 @@ const WorkLog: React.FC = () => {
                         </span>
                       ))}
                     </div>
-                    <h3 className="wl__card-title">{item.title}</h3>
-                    <p className="wl__card-summary">{item.summary}</p>
-                  </motion.button>
-                ))}
-              </div>
-
-              {listPageCount > 1 && (
-                <div className="wl__pager" role="navigation" aria-label="케이스 목록 페이지">
-                  <button
-                    type="button"
-                    className="wl__pager-btn"
-                    disabled={safePage === 0}
-                    onClick={() => setListPage((p) => Math.max(0, p - 1))}
-                  >
-                    ← Prev
-                  </button>
-                  <div className="wl__pager-status">
-                    <span className="wl__pager-status-label">Page</span>
-                    <strong>
-                      {safePage + 1}
-                      <span className="wl__pager-status-sep">/</span>
-                      {listPageCount}
-                    </strong>
+                    <span className="wl__feature-index" aria-hidden="true">
+                      {String(activeIdx + 1).padStart(2, '0')}
+                      <span className="wl__feature-index-sep">/</span>
+                      {String(workCases.length).padStart(2, '0')}
+                    </span>
                   </div>
-                  <button
-                    type="button"
-                    className="wl__pager-btn wl__pager-btn--next"
-                    disabled={safePage >= listPageCount - 1}
-                    onClick={() => setListPage((p) => Math.min(listPageCount - 1, p + 1))}
-                  >
-                    Next →
-                  </button>
-                </div>
-              )}
-            </motion.div>
-          ) : (
-            <motion.div
-              key={selected.id}
-              className="cs wl__detail"
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 8 }}
-              transition={{ duration: 0.35 }}
-            >
-              <div className="wl__detail-top">
-                <button type="button" className="wl__back" onClick={closeDetail}>
-                  ← All case studies
-                </button>
-              </div>
 
-              <div
-                className="wl__detail-scroll"
-                data-scroll-y
-                ref={scrollRef}
-                onWheel={(e) => e.stopPropagation()}
-              >
-                <div className="cs__header">
-                  <div className="cs__pills">
-                    {selected.tags.map((tag, i) => (
-                      <span
-                        key={tag}
-                        className={`cs__pill ${i === 0 ? 'cs__pill--info' : ''}`}
-                      >
-                        {tag}
-                      </span>
+                  <p className="wl__feature-date">{active.date}</p>
+                  <h3 className="wl__feature-title">{active.title}</h3>
+                  <p className="wl__feature-summary">{active.summary}</p>
+
+                  <div className="wl__feature-stats">
+                    {active.stats.map((s) => (
+                      <div key={s.label} className="wl__feature-stat">
+                        <span className="wl__feature-stat-value">{s.value}</span>
+                        <span className="wl__feature-stat-label">{s.label}</span>
+                      </div>
                     ))}
                   </div>
-                  <h2 className="cs__title">{selected.title}</h2>
-                  <p className="cs__lead">{selected.summary}</p>
-                </div>
 
-                <div className="cs__stats">
-                  {selected.stats.map((s) => (
-                    <div key={s.label} className="cs__stat">
-                      <span className="cs__stat-value">{s.value}</span>
-                      <span className="cs__stat-label">{s.label}</span>
-                    </div>
-                  ))}
-                </div>
+                  <hr className="cs__divider" />
 
-                <hr className="cs__divider" />
+                  <div className="wl__feature-body">
+                    <active.Content />
+                  </div>
+                </motion.article>
+              </AnimatePresence>
 
-                <selected.Content />
+              <div className="wl__progress" aria-hidden="true">
+                {workCases.map((c, i) => (
+                  <span
+                    key={c.id}
+                    className={`wl__progress-dot${i === activeIdx ? ' wl__progress-dot--active' : ''}`}
+                  />
+                ))}
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            </div>
+          </div>
+        </motion.div>
       </div>
     </section>
   );
