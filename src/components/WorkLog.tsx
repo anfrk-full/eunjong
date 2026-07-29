@@ -102,7 +102,17 @@ const workCases: WorkCase[] = [
 ];
 
 const CARD_GAP = 10;
-const CARD_MIN_H = 132;
+const CARD_FALLBACK_H = 160;
+/** 카드 내용이 이 비율 미만으로만 보이면(≒ 40% 이상 비가시) 해당 행은 페이지에 넣지 않음 */
+const MIN_VISIBLE_RATIO = 0.6;
+
+function fitRows(gridH: number, cardH: number, gap: number): number {
+  if (gridH < 40 || cardH <= 0) return 1;
+  // 마지막 행은 cardH * MIN_VISIBLE_RATIO 만 확보되면 허용
+  const rows =
+    Math.floor((gridH + gap - cardH * MIN_VISIBLE_RATIO) / (cardH + gap)) + 1;
+  return Math.max(1, rows);
+}
 
 const WorkLog: React.FC = () => {
   const { ref, inView } = useInView();
@@ -144,9 +154,18 @@ const WorkLog: React.FC = () => {
       const cols = window.matchMedia('(max-width: 900px)').matches ? 1 : 2;
       const h = el.clientHeight;
       if (h < 40) return;
-      const rows = Math.max(1, Math.floor((h + CARD_GAP) / (CARD_MIN_H + CARD_GAP)));
+
+      const cardEls = el.querySelectorAll<HTMLElement>('.wl__card');
+      let cardH = CARD_FALLBACK_H;
+      if (cardEls.length > 0) {
+        cardH = Math.max(
+          ...Array.from(cardEls).map((c) => Math.max(c.offsetHeight, c.scrollHeight))
+        );
+      }
+
+      const rows = fitRows(h, cardH, CARD_GAP);
       const nextSize = Math.min(workCases.length, Math.max(cols, rows * cols));
-      setPageSize(nextSize);
+      setPageSize((prev) => (prev === nextSize ? prev : nextSize));
       setListPage((p) => {
         const maxPage = Math.max(0, Math.ceil(workCases.length / nextSize) - 1);
         return Math.min(p, maxPage);
@@ -154,12 +173,13 @@ const WorkLog: React.FC = () => {
     };
 
     measure();
-    const ro = new ResizeObserver(measure);
+    const rafMeasure = () => requestAnimationFrame(measure);
+    const ro = new ResizeObserver(rafMeasure);
     ro.observe(el);
-    window.addEventListener('resize', measure);
+    window.addEventListener('resize', rafMeasure);
     return () => {
       ro.disconnect();
-      window.removeEventListener('resize', measure);
+      window.removeEventListener('resize', rafMeasure);
     };
   }, [selectedId, pageId]);
 

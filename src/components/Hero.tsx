@@ -1,11 +1,10 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+﻿import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { usePage } from '../context/PageContext';
 
 const MAGNET_STRENGTH = 0.28;
 const MAGNET_MAX = 20;
-const TILT_MAX = 8;
-const DROP_COUNT = 90;
+const DROP_COUNT = 120;
 const UMBRELLA_W = 72;
 const UMBRELLA_H = 28;
 
@@ -15,6 +14,10 @@ type Drop = {
   vx: number;
   vy: number;
   len: number;
+  width: number;
+  alpha: number;
+  /** 0 far 쨌 1 mid 쨌 2 near */
+  layer: 0 | 1 | 2;
 };
 
 type Splash = {
@@ -67,13 +70,29 @@ const MagneticButton: React.FC<{
 };
 
 function spawnDrop(w: number, h: number, fromTop = true): Drop {
+  const roll = Math.random();
+  const layer: 0 | 1 | 2 = roll < 0.4 ? 0 : roll < 0.75 ? 1 : 2;
+
+  const layerScale = layer === 0 ? 0.7 : layer === 1 ? 1.05 : 1.45;
+  const wind = -0.25 - Math.random() * 0.55;
+  const fall = (3.4 + Math.random() * 3) * layerScale;
+
   return {
-    x: Math.random() * w,
-    y: fromTop ? -Math.random() * h * 0.4 : Math.random() * h,
-    vx: -0.35 - Math.random() * 0.45,
-    vy: 4.2 + Math.random() * 3.2,
-    len: 10 + Math.random() * 12,
+    x: Math.random() * (w + 80) - 40,
+    y: fromTop ? -Math.random() * h * 0.55 : Math.random() * h,
+    vx: wind * layerScale,
+    vy: fall,
+    len: (14 + Math.random() * 22) * layerScale,
+    width: (1.2 + Math.random() * 1.4) * (layer === 2 ? 1.5 : layer === 1 ? 1.15 : 0.85),
+    alpha: (0.32 + Math.random() * 0.28) * (layer === 2 ? 1.4 : layer === 1 ? 1.1 : 0.8),
+    layer,
   };
+}
+
+function rainRgba(light: boolean, alpha: number) {
+  return light
+    ? `rgba(59, 110, 210, ${alpha})`
+    : `rgba(198, 220, 255, ${alpha})`;
 }
 
 const RainScene: React.FC<{ enabled: boolean; active: boolean }> = ({
@@ -86,6 +105,8 @@ const RainScene: React.FC<{ enabled: boolean; active: boolean }> = ({
   const splashes = useRef<Splash[]>([]);
   const raf = useRef<number>(0);
   const size = useRef({ w: 0, h: 0 });
+  const activeRef = useRef(active);
+  activeRef.current = active;
 
   useEffect(() => {
     if (!enabled) return;
@@ -99,16 +120,26 @@ const RainScene: React.FC<{ enabled: boolean; active: boolean }> = ({
       if (!parent) return;
       const rect = parent.getBoundingClientRect();
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      size.current = { w: rect.width, h: rect.height };
+      const prev = size.current;
+      const next = { w: rect.width, h: rect.height };
+      size.current = next;
       canvas.width = Math.floor(rect.width * dpr);
       canvas.height = Math.floor(rect.height * dpr);
       canvas.style.width = `${rect.width}px`;
       canvas.style.height = `${rect.height}px`;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      drops.current = Array.from({ length: DROP_COUNT }, () =>
-        spawnDrop(rect.width, rect.height, false)
-      );
-      splashes.current = [];
+
+      // 최초 진입/크기 변경이 클 때만 빗방울 재생성 — 우산 on/off로는 리셋하지 않음
+      const needsRespawn =
+        drops.current.length === 0 ||
+        Math.abs(prev.w - next.w) > 1 ||
+        Math.abs(prev.h - next.h) > 1;
+      if (needsRespawn) {
+        drops.current = Array.from({ length: DROP_COUNT }, () =>
+          spawnDrop(rect.width, rect.height, false)
+        );
+        splashes.current = [];
+      }
     };
 
     resize();
@@ -119,7 +150,7 @@ const RainScene: React.FC<{ enabled: boolean; active: boolean }> = ({
       document.documentElement.getAttribute('data-theme') === 'light';
 
     const hitUmbrella = (d: Drop) => {
-      if (!pointer.current.inside || !active) return false;
+      if (!pointer.current.inside || !activeRef.current) return false;
       const ux = pointer.current.x;
       const uy = pointer.current.y;
       const cx = ux;
@@ -131,7 +162,6 @@ const RainScene: React.FC<{ enabled: boolean; active: boolean }> = ({
       return nx * nx + ny * ny <= 1 && dy >= -UMBRELLA_H * 0.35;
     };
 
-    /** 긴 빗줄기 제거 + 둥근 물방울로 쪼개져 흩어짐 */
     const shatter = (d: Drop, w: number, h: number) => {
       const ux = pointer.current.x;
       const hitX = d.x;
@@ -156,34 +186,61 @@ const RainScene: React.FC<{ enabled: boolean; active: boolean }> = ({
       Object.assign(d, spawnDrop(w, h, true));
     };
 
+    const drawDrop = (d: Drop, light: boolean) => {
+      const speed = Math.hypot(d.vx, d.vy) || 1;
+      const ux = d.vx / speed;
+      const uy = d.vy / speed;
+
+      const headX = d.x;
+      const headY = d.y;
+      const tailX = d.x - ux * d.len;
+      const tailY = d.y - uy * d.len;
+
+      const grad = ctx.createLinearGradient(tailX, tailY, headX, headY);
+      grad.addColorStop(0, rainRgba(light, 0));
+      grad.addColorStop(0.45, rainRgba(light, d.alpha * 0.55));
+      grad.addColorStop(0.82, rainRgba(light, d.alpha));
+      grad.addColorStop(1, rainRgba(light, Math.min(1, d.alpha * 1.25)));
+
+      ctx.strokeStyle = grad;
+      ctx.lineWidth = d.width;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(tailX, tailY);
+      ctx.lineTo(headX, headY);
+      ctx.stroke();
+
+      if (d.layer >= 1) {
+        ctx.fillStyle = rainRgba(light, d.alpha * 0.9);
+        ctx.beginPath();
+        ctx.arc(headX, headY, Math.max(1.2, d.width * 0.7), 0, Math.PI * 2);
+        ctx.fill();
+      }
+    };
+
     const tick = () => {
       const { w, h } = size.current;
       ctx.clearRect(0, 0, w, h);
 
       const light = isLight();
-      const rainColor = light ? 'rgba(37, 99, 235, 0.38)' : 'rgba(186, 210, 255, 0.42)';
-      const splashColor = light ? 'rgba(37, 99, 235, 0.55)' : 'rgba(210, 228, 255, 0.62)';
+      const splashColor = light ? 'rgba(59, 110, 210, 0.55)' : 'rgba(210, 228, 255, 0.62)';
 
-      ctx.strokeStyle = rainColor;
-      ctx.lineWidth = 1.25;
-      ctx.lineCap = 'round';
+      for (let layer = 0; layer <= 2; layer++) {
+        for (const d of drops.current) {
+          if (d.layer !== layer) continue;
 
-      for (const d of drops.current) {
-        if (hitUmbrella(d)) {
-          shatter(d, w, h);
-          continue;
-        }
+          if (hitUmbrella(d)) {
+            shatter(d, w, h);
+            continue;
+          }
 
-        d.x += d.vx;
-        d.y += d.vy;
+          d.x += d.vx;
+          d.y += d.vy;
+          drawDrop(d, light);
 
-        ctx.beginPath();
-        ctx.moveTo(d.x, d.y);
-        ctx.lineTo(d.x + d.vx * 1.2, d.y + d.len);
-        ctx.stroke();
-
-        if (d.y > h + 20 || d.x < -40 || d.x > w + 40) {
-          Object.assign(d, spawnDrop(w, h, true));
+          if (d.y > h + 30 || d.x < -60 || d.x > w + 60) {
+            Object.assign(d, spawnDrop(w, h, true));
+          }
         }
       }
 
@@ -214,7 +271,7 @@ const RainScene: React.FC<{ enabled: boolean; active: boolean }> = ({
       cancelAnimationFrame(raf.current);
       ro.disconnect();
     };
-  }, [enabled, active]);
+  }, [enabled]);
 
   useEffect(() => {
     if (!enabled) return;
@@ -265,39 +322,38 @@ const UmbrellaCursor: React.FC<{
       style={{ transform: `translate(${x}px, ${y}px)` }}
       aria-hidden="true"
     >
-      <svg
-        className="hero__umbrella-sprite"
-        viewBox="0 0 48 52"
-        width="48"
-        height="52"
-        fill="none"
-      >
-        {/* canopy */}
-        <path
-          className="hero__umbrella-canopy"
-          d="M4 26c0-12 10-22 20-22s20 10 20 22
-             c-5-4-12-6-20-6s-15 2-20 6z"
-        />
-        {/* tip */}
-        <circle className="hero__umbrella-tip" cx="24" cy="5" r="1.5" />
-        {/* shaft */}
-        <path className="hero__umbrella-pole" d="M24 20v22" />
-        {/* handle */}
-        <path className="hero__umbrella-handle" d="M24 42c0 5 5 7 8 5.5" />
-      </svg>
+      <div className="hero__umbrella-fold">
+        <svg
+          className="hero__umbrella-sprite"
+          viewBox="0 0 48 52"
+          width="48"
+          height="52"
+          fill="none"
+        >
+          <path
+            className="hero__umbrella-canopy"
+            d="M4 26c0-12 10-22 20-22s20 10 20 22
+               c-5-4-12-6-20-6s-15 2-20 6z"
+          />
+          <circle className="hero__umbrella-tip" cx="24" cy="5" r="1.5" />
+          <path className="hero__umbrella-pole" d="M24 20v22" />
+          <path className="hero__umbrella-handle" d="M24 42c0 5 5 7 8 5.5" />
+        </svg>
+      </div>
     </div>
   );
 };
 
+const UMBRELLA_IDLE_MS = 480;
+
 const Hero: React.FC = () => {
   const { goTo, pageId } = usePage();
   const heroRef = useRef<HTMLElement>(null);
-  const panelRef = useRef<HTMLDivElement>(null);
+  const idleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [fxEnabled, setFxEnabled] = useState(true);
-  const [tilt, setTilt] = useState({ rx: 0, ry: 0 });
-  const [spot, setSpot] = useState({ x: 50, y: 50 });
-  const [cursor, setCursor] = useState({ x: 0, y: 0, on: false });
+  const [cursor, setCursor] = useState({ x: 0, y: 0, on: false, open: false });
   const rainActive = pageId === 'hero';
+  const rainOn = fxEnabled && rainActive;
 
   useEffect(() => {
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -305,6 +361,12 @@ const Hero: React.FC = () => {
     sync();
     mq.addEventListener('change', sync);
     return () => mq.removeEventListener('change', sync);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (idleTimer.current) clearTimeout(idleTimer.current);
+    };
   }, []);
 
   const onHeroMove = useCallback(
@@ -315,70 +377,75 @@ const Hero: React.FC = () => {
         x: e.clientX - rect.left,
         y: e.clientY - rect.top,
         on: true,
+        open: true,
       });
+
+      if (idleTimer.current) clearTimeout(idleTimer.current);
+      idleTimer.current = setTimeout(() => {
+        setCursor((c) => (c.on ? { ...c, open: false } : c));
+      }, UMBRELLA_IDLE_MS);
     },
     [fxEnabled]
   );
 
   const onHeroLeave = useCallback(() => {
-    setCursor((c) => ({ ...c, on: false }));
+    if (idleTimer.current) clearTimeout(idleTimer.current);
+    setCursor((c) => ({ ...c, on: false, open: false }));
   }, []);
 
-  const onPanelMove = useCallback(
-    (e: React.PointerEvent<HTMLDivElement>) => {
-      if (!fxEnabled || e.pointerType === 'touch' || !panelRef.current) return;
-      const rect = panelRef.current.getBoundingClientRect();
-      const px = (e.clientX - rect.left) / rect.width;
-      const py = (e.clientY - rect.top) / rect.height;
-      setTilt({
-        rx: (0.5 - py) * TILT_MAX * 2,
-        ry: (px - 0.5) * TILT_MAX * 2,
-      });
-      setSpot({ x: px * 100, y: py * 100 });
-    },
-    [fxEnabled]
-  );
-
-  const onPanelLeave = useCallback(() => {
-    setTilt({ rx: 0, ry: 0 });
-    setSpot({ x: 50, y: 50 });
-  }, []);
+  const umbrellaOpen = cursor.open && rainActive;
 
   return (
     <section
       id="hero"
       ref={heroRef}
-      className={`hero${fxEnabled && rainActive ? ' hero--rain' : ''}`}
+      className={`hero${rainOn ? ' hero--rain' : ''}`}
       onPointerMove={onHeroMove}
       onPointerLeave={onHeroLeave}
     >
-      <RainScene enabled={fxEnabled && rainActive} active={cursor.on && rainActive} />
+      <RainScene enabled={rainOn} active={umbrellaOpen} />
       <UmbrellaCursor
-        enabled={fxEnabled && rainActive}
-        visible={cursor.on && rainActive}
+        enabled={rainOn}
+        visible={umbrellaOpen}
         x={cursor.x}
         y={cursor.y}
       />
 
       <motion.div
         className="hero__content"
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+        transition={{ duration: 0.75, ease: [0.16, 1, 0.3, 1] }}
       >
-        <div className="hero__badge">
-          <span className="hero__badge-dot" />
-          Available for work
-        </div>
+        <motion.p
+          className="hero__hint"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.8, delay: 0.35 }}
+        >
+          <span className="hero__hint-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none">
+              <path
+                d="M4 14c0-5.5 4.5-10 10-10s10 4.5 10 10c-2.5-2-6-3-10-3s-7.5 1-10 3z"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M14 11v8.5c0 1.5 1.4 2.2 2.4 1.7"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+              />
+            </svg>
+          </span>
+          마우스를 움직이면 우산이 펼쳐집니다
+        </motion.p>
 
-        <h1 className="hero__title">
-          Kang Eunjong
-          <br />
-          <span>Full-Stack Developer</span>
-        </h1>
+        <h1 className="hero__title">Kang Eunjong</h1>
 
         <p className="hero__lead">
-          프론트엔드부터 백엔드까지, 쓰기 편한 서비스를 설계하고 만듭니다.
+          비를 가리듯, 화면의 경험을 다듬습니다.
         </p>
 
         <div className="hero__actions">
@@ -395,55 +462,11 @@ const Hero: React.FC = () => {
             <button
               type="button"
               className="btn btn--outline"
-              onClick={() => goTo('worklog')}
+              onClick={() => goTo('about')}
             >
-              Work log
+              About me
             </button>
           </MagneticButton>
-        </div>
-
-        <div className="hero__panel-stage">
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-          >
-            <div
-              ref={panelRef}
-              className={`hero__panel${fxEnabled ? ' hero__panel--tilt' : ''}`}
-              onPointerMove={onPanelMove}
-              onPointerLeave={onPanelLeave}
-              style={
-                fxEnabled
-                  ? {
-                      transform: `rotateX(${tilt.rx}deg) rotateY(${tilt.ry}deg)`,
-                      ['--spot-x' as string]: `${spot.x}%`,
-                      ['--spot-y' as string]: `${spot.y}%`,
-                    }
-                  : undefined
-              }
-            >
-              <div className="hero__panel-bar">
-                <span className="hero__panel-dot" />
-                <span className="hero__panel-dot" />
-                <span className="hero__panel-dot" />
-              </div>
-              <div className="hero__panel-body">
-                <div className="hero__stat">
-                  <p className="hero__stat-label">Focus</p>
-                  <p className="hero__stat-value">Full-Stack</p>
-                </div>
-                <div className="hero__stat">
-                  <p className="hero__stat-label">Stack</p>
-                  <p className="hero__stat-value">React · PHP</p>
-                </div>
-                <div className="hero__stat">
-                  <p className="hero__stat-label">Based in</p>
-                  <p className="hero__stat-value">Gwangju</p>
-                </div>
-              </div>
-            </div>
-          </motion.div>
         </div>
       </motion.div>
     </section>

@@ -30,6 +30,9 @@ export const PAGE_LABELS: Record<PageId, string> = {
   worklog: 'Work Log',
 };
 
+/** true면 페이지 전환을 막고 소비한 것으로 처리 */
+export type WheelConsumer = (delta: number) => boolean;
+
 interface PageContextValue {
   index: number;
   pageId: PageId;
@@ -39,6 +42,7 @@ interface PageContextValue {
   prev: () => void;
   locked: boolean;
   setLocked: (locked: boolean) => void;
+  setWheelConsumer: (consumer: WheelConsumer | null) => void;
 }
 
 const PageContext = createContext<PageContextValue | null>(null);
@@ -51,6 +55,11 @@ export const PageProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [locked, setLocked] = useState(false);
   const cooldown = useRef(false);
   const touchStart = useRef<{ x: number; y: number } | null>(null);
+  const wheelConsumer = useRef<WheelConsumer | null>(null);
+
+  const setWheelConsumer = useCallback((consumer: WheelConsumer | null) => {
+    wheelConsumer.current = consumer;
+  }, []);
 
   const pageCount = PAGE_IDS.length;
   const pageId = PAGE_IDS[index];
@@ -90,9 +99,12 @@ export const PageProvider: React.FC<{ children: React.ReactNode }> = ({ children
       e.preventDefault();
       if (cooldown.current) return;
       const delta = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
+      if (delta === 0) return;
+      // 섹션이 휠을 소비하면 페이지 쿨다운을 걸지 않아 연속 스크롤 가능
+      if (wheelConsumer.current?.(delta)) return;
       if (delta > 0) {
         setIndex((i) => Math.min(i + 1, pageCount - 1));
-      } else if (delta < 0) {
+      } else {
         setIndex((i) => Math.max(i - 1, 0));
       }
       bumpCooldown();
@@ -155,8 +167,9 @@ export const PageProvider: React.FC<{ children: React.ReactNode }> = ({ children
       prev,
       locked,
       setLocked,
+      setWheelConsumer,
     }),
-    [index, pageId, pageCount, goTo, next, prev, locked]
+    [index, pageId, pageCount, goTo, next, prev, locked, setWheelConsumer]
   );
 
   return <PageContext.Provider value={value}>{children}</PageContext.Provider>;
