@@ -91,10 +91,12 @@ const skillCategories: SkillCategory[] = [
   },
 ];
 
-const ANGLE_STEP = 14;
+const ANGLE_STEP = 19;
+const ANGLE_STEP_COMPACT = 14;
 const LAST = skillCategories.length - 1;
 const DELTA_PER_CARD = 160;
 const STEP_COOLDOWN_MS = 420;
+const COMPACT_HEIGHT_QUERY = '(max-height: 780px)';
 
 const LEVEL_LABELS = ['', 'Familiar', 'Working', 'Solid', 'Strong', 'Expert'];
 const SKILL_ICON_URL: Record<string, string> = {
@@ -121,6 +123,7 @@ const Skills: React.FC = () => {
   const { pageId, setWheelConsumer, setLocked } = usePage();
   const [active, setActive] = useState(0);
   const [expanded, setExpanded] = useState(false);
+  const [angleStep, setAngleStep] = useState(ANGLE_STEP);
   const activeRef = useRef(0);
   const expandedRef = useRef(false);
   const accumRef = useRef(0);
@@ -128,6 +131,14 @@ const Skills: React.FC = () => {
   const prevPageRef = useRef(pageId);
 
   const activeCategory = skillCategories[active];
+
+  useEffect(() => {
+    const mq = window.matchMedia(COMPACT_HEIGHT_QUERY);
+    const sync = () => setAngleStep(mq.matches ? ANGLE_STEP_COMPACT : ANGLE_STEP);
+    sync();
+    mq.addEventListener('change', sync);
+    return () => mq.removeEventListener('change', sync);
+  }, []);
 
   useEffect(() => {
     activeRef.current = active;
@@ -296,7 +307,7 @@ const Skills: React.FC = () => {
           >
             {skillCategories.map((cat, i) => {
               const offset = i - active;
-              const angle = offset * ANGLE_STEP;
+              const angle = offset * angleStep;
               const abs = Math.abs(offset);
               const hidden = abs > 4;
               const isActive = offset === 0;

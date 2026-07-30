@@ -6,12 +6,14 @@ import { useTheme } from '../context/ThemeContext';
 import SheepHillsBackground from './about/SheepHillsBackground';
 
 const EMAIL = 'rkddmswhd@naver.com';
+const COMPACT_QUERY = '(max-height: 760px), (max-width: 900px)';
 
 const About: React.FC = () => {
   const { ref, inView } = useInView();
   const { pageId } = usePage();
   const { theme } = useTheme();
   const [fxEnabled, setFxEnabled] = useState(true);
+  const [compactCopy, setCompactCopy] = useState(false);
   const [toastVisible, setToastVisible] = useState(false);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const sheepActive = pageId === 'about' && fxEnabled;
@@ -19,6 +21,14 @@ const About: React.FC = () => {
   useEffect(() => {
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
     const sync = () => setFxEnabled(!mq.matches);
+    sync();
+    mq.addEventListener('change', sync);
+    return () => mq.removeEventListener('change', sync);
+  }, []);
+
+  useEffect(() => {
+    const mq = window.matchMedia(COMPACT_QUERY);
+    const sync = () => setCompactCopy(mq.matches);
     sync();
     mq.addEventListener('change', sync);
     return () => mq.removeEventListener('change', sync);
@@ -97,14 +107,22 @@ const About: React.FC = () => {
             animate={inView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.6, delay: 0.28 }}
           >
-            <p>
-              백엔드도 중요하지만, 손이 먼저 가는 곳은 화면입니다.
-              클릭 한 번이 느껴지게, 스크롤 한 줄이 기억되게 인터랙션을 추가하는걸 좋아합니다.
-            </p>
-            <p>
-              React와 TypeScript로 움직임을 설계하고, Spring Boot·PHP로 그 뒤를 받칩니다.
-              동작하는 코드보다, 머물게 만드는 경험을 남기고 싶습니다.
-            </p>
+            <div className="about__copy-full" hidden={compactCopy}>
+              <p>
+                백엔드도 중요하지만, 손이 먼저 가는 곳은 화면입니다.
+                클릭 한 번이 느껴지게, 스크롤 한 줄이 기억되게 인터랙션을 추가하는걸 좋아합니다.
+              </p>
+              <p>
+                React와 TypeScript로 움직임을 설계하고, Spring Boot·PHP로 그 뒤를 받칩니다.
+                동작하는 코드보다, 머물게 만드는 경험을 남기고 싶습니다.
+              </p>
+            </div>
+            <div className="about__copy-short" hidden={!compactCopy}>
+              <p>
+                화면 인터랙션을 설계하는 걸 좋아합니다.
+                React·TypeScript로 움직임을, Spring Boot·PHP로 뒤를 받칩니다.
+              </p>
+            </div>
           </motion.div>
 
           <motion.ul
@@ -125,7 +143,19 @@ const About: React.FC = () => {
                 onClick={copyEmail}
                 aria-label="이메일 복사"
               >
-                {EMAIL}
+                <span className="about__fact-copy-text">{EMAIL}</span>
+                <span className="about__fact-copy-icon" aria-hidden="true">
+                  {toastVisible ? (
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  ) : (
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                    </svg>
+                  )}
+                </span>
               </button>
             </li>
           </motion.ul>
