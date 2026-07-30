@@ -95,7 +95,7 @@ const workCases: WorkCase[] = [
     title: '변경기록지 다중 첨부',
     summary:
       '덮어쓰기에서 누적 추가로 전환. 레거시 스키마 제약 안에서 무결성·파일명·권한 삭제를 설계했습니다.',
-    tags: ['Case Study', 'PHP / MySQL', 'Legacy's, 'File Upload'],
+    tags: ['Case Study', 'PHP / MySQL', 'Legacy', 'File Upload'],
     stats: [
       { value: '1→20', label: '첨부 용량' },
       { value: 'Append', label: '저장 전략' },
