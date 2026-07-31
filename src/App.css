@@ -16,6 +16,7 @@
   --line-strong: rgba(255, 255, 255, 0.14);
   --accent: #4f8cff;
   --accent-soft: rgba(79, 140, 255, 0.12);
+  --text-emphasis: color-mix(in srgb, var(--accent) 68%, #f8fafc);
   --success: #3ecf8e;
   --font: 'Pretendard Variable', Pretendard, 'Plus Jakarta Sans', -apple-system, sans-serif;
   --font-en: 'Plus Jakarta Sans', 'Pretendard Variable', sans-serif;
@@ -68,6 +69,7 @@
   --line-strong: rgba(0, 0, 0, 0.18);
   --accent: #2563eb;
   --accent-soft: rgba(37, 99, 235, 0.1);
+  --text-emphasis: color-mix(in srgb, var(--accent) 62%, #0f172a);
   --success: #16a34a;
   --shadow: 0 0 0 1px var(--line), 0 8px 40px rgba(0, 0, 0, 0.08);
   --nav-scrolled-bg: rgba(250, 250, 250, 0.82);
@@ -2876,17 +2878,6 @@ img {
   line-height: 1.7;
 }
 
-.projects__section-text--emphasis {
-  margin-top: 8px;
-  color: var(--ink-soft);
-  font-weight: 560;
-}
-
-.projects__section-text--emphasis strong {
-  color: var(--ink);
-  margin-right: 4px;
-}
-
 .projects__case {
   margin-bottom: 8px;
   padding-top: 4px;
@@ -3897,6 +3888,16 @@ img {
   color: var(--ink-soft);
   font-size: 0.92rem;
   line-height: 1.75;
+}
+
+.projects__section-text strong,
+.wl__feature-body strong,
+.cs__text strong,
+.cs__list strong,
+.cs__small strong,
+.cs__card strong {
+  color: var(--text-emphasis);
+  font-weight: 700;
 }
 
 .cs__caption {

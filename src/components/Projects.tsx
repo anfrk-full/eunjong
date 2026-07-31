@@ -8,9 +8,9 @@ type Category = 'All' | 'Frontend' | 'Backend' | 'Fullstack';
 /** Problem → Solution → Result 한 세트 */
 interface CaseStudy {
   title: string;
-  problem: string;
-  solution: string;
-  result: string;
+  problem: React.ReactNode;
+  solution: React.ReactNode;
+  result: React.ReactNode;
   images?: string[];
 }
 
@@ -50,32 +50,56 @@ const projectData: Project[] = [
     cases: [
       {
         title: '이미지 저장·관리 구조',
-        problem:
-          '초기에는 프론트엔드에서 이미지를 직접 다루는 방식으로 접근하려 했습니다. ' +
-          '그러나 이미지가 클라이언트에 머무르면 용량·보안·동기화 측면에서 한계가 있었고, ' +
-          '여러 화면에서 동일 이미지를 일관되게 보여주기 어렵다는 문제가 드러났습니다. ' +
-          '혼자 해결하려다 막히는 구간이 길어지면서, 일정에도 영향을 줄 수 있는 상황이었습니다.',
-        solution:
-          '혼자 붙잡고 있기보다 팀원들과 문제를 공유하고, 백엔드에서 이미지를 저장·관리하는 방향으로 설계를 전환했습니다. ' +
-          '업로드는 API를 통해 서버에 위임하고, 프론트는 URL만 받아 렌더링하도록 역할을 분리했습니다. ' +
-          '이 과정에서 API 명세와 저장 경로·권한 처리까지 함께 맞춰 나갔습니다.',
-        result:
-          '이미지 저장·조회가 백엔드 중심으로 정리되어 프론트 부담이 줄었고, ' +
-          '크루 소개·프로필 등 여러 화면에서 동일한 리소스를 안정적으로 재사용할 수 있게 되었습니다. ' +
-          '무엇보다 혼자 막히던 문제를 팀과 공유하는 협업 습관이 이후 이슈 해결 속도를 높이는 계기가 되었습니다.',
+        problem: (
+          <>
+            초기에는 프론트엔드에서 이미지를 직접 다루는 방식으로 접근하려 했습니다. 그러나 이미지가
+            클라이언트에 머무르면 <strong>용량·보안·동기화 측면에서 한계</strong>가 있었고, 여러
+            화면에서 동일 이미지를 일관되게 보여주기 어렵다는 문제가 드러났습니다.{' '}
+            <strong>혼자 해결하려다 막히는 구간</strong>이 길어지면서,{' '}
+            <strong>일정에도 영향</strong>을 줄 수 있는 상황이었습니다.
+          </>
+        ),
+        solution: (
+          <>
+            혼자 붙잡고 있기보다 <strong>팀원들과 문제를 공유</strong>하고,{' '}
+            <strong>백엔드에서 이미지를 저장·관리하는 방향</strong>으로 설계를 전환했습니다. 업로드는
+            API를 통해 서버에 위임하고, 프론트는 URL만 받아 렌더링하도록 역할을 분리했습니다. 이
+            과정에서 API 명세와 저장 경로·권한 처리까지 함께 맞춰 나갔습니다.
+          </>
+        ),
+        result: (
+          <>
+            이미지 저장·조회가 백엔드 중심으로 정리되어 <strong>프론트 부담이 줄었고</strong>, 크루
+            소개·프로필 등 여러 화면에서 동일한 리소스를 <strong>안정적으로 재사용</strong>할 수 있게
+            되었습니다. 무엇보다 혼자 막히던 문제를 <strong>팀과 공유하는 협업 습관</strong>이 이후
+            이슈 해결 속도를 높이는 계기가 되었습니다.
+          </>
+        ),
       },
       {
         title: '크루 찾기 UX 개선',
-        problem:
-          '크루 찾기 페이지는 검색어 입력만으로 크루를 찾는 구조였습니다. ' +
-          '사용자가 원하는 운동 종목이나 지역을 알고 있어도, 키워드를 정확히 맞추지 않으면 원하는 결과를 얻기 어려웠고, ' +
-          '목록을 일일이 훑어야 하는 불편함이 있었습니다.',
-        solution:
-          '단순 검색에 의존하던 흐름을 운동 종목·지역 기반 필터링으로 재설계했습니다. ' +
-          '사용자가 조건을 선택하면 바로 맞는 크루만 좁혀 볼 수 있도록 UI와 API 연동을 함께 구현했습니다.',
-        result:
-          '원하는 조건으로 빠르게 크루를 찾을 수 있게 되어 탐색 비용이 줄었고, ' +
-          '검색어에만 의존하던 경험에서 벗어나 목적 지향적인 매칭 흐름으로 사용자 경험을 개선했습니다.',
+        problem: (
+          <>
+            크루 찾기 페이지는 <strong>검색어 입력만으로 크루를 찾는 구조</strong>였습니다. 사용자가
+            원하는 운동 종목이나 지역을 알고 있어도, 키워드를{' '}
+            <strong>정확히 맞추지 않으면 원하는 결과를 얻기 어려웠고</strong>, 목록을 일일이 훑어야
+            하는 불편함이 있었습니다.
+          </>
+        ),
+        solution: (
+          <>
+            단순 검색에 의존하던 흐름을 운동 종목·지역 기반 <strong>필터링으로 재설계</strong>
+            했습니다. 사용자가 조건을 선택하면 바로 맞는 크루만 좁혀 볼 수 있도록 UI와 API 연동을 함께
+            구현했습니다.
+          </>
+        ),
+        result: (
+          <>
+            원하는 조건으로 빠르게 크루를 찾을 수 있게 되어 <strong>탐색 비용이 줄었고</strong>,
+            검색어에만 의존하던 경험에서 벗어나{' '}
+            <strong>목적 지향적인 매칭 흐름으로 사용자 경험을 개선</strong>했습니다.
+          </>
+        ),
       },
     ],
   },
@@ -95,33 +119,58 @@ const projectData: Project[] = [
     cases: [
       {
         title: '시험 일정 입력 페이지',
-        problem:
-          '시험 일정은 담당자가 직접 방문해 시간을 알려주거나, 전화로 전달하는 방식이었습니다. ' +
-          'PC 업무 중에도 자리를 비우거나 통화를 반복해야 해서 전달 누락·재확인이 잦았고, ' +
-          '일정 정보가 한곳에 남지 않아 공유·기록이 불편했습니다.',
-        solution:
-          '시험 일정을 입력·확인할 수 있는 별도 페이지를 만들었습니다. ' +
-          'PC로 업무를 보면서 바로 일정을 등록할 수 있도록 화면을 구성해, ' +
-          '대면·전화 전달에 의존하던 흐름을 웹 입력으로 대체했습니다.',
-        result:
-          '자리를 비우지 않고도 일정을 즉시 입력·공유할 수 있게 되어 전달 비용이 줄었고, ' +
-          '일정이 시스템에 남아 이후 조회·수정이 쉬워졌습니다.',
+        problem: (
+          <>
+            시험 일정은 담당자가 <strong>직접 방문해 시간을 알려주거나, 전화로 전달하는 방식</strong>
+            이었습니다. PC 업무 중에도 자리를 비우거나 통화를 반복해야 해서{' '}
+            <strong>전달 누락·재확인이 잦았고</strong>,{' '}
+            <strong>일정 정보가 한곳에 남지 않아 공유·기록이 불편</strong>했습니다.
+          </>
+        ),
+        solution: (
+          <>
+            시험 일정을 입력·확인할 수 있는 별도 페이지를 만들었습니다. PC로 업무를 보면서 바로
+            일정을 등록할 수 있도록 화면을 구성해,{' '}
+            <strong>대면·전화 전달에 의존하던 흐름을 웹 입력으로 대체</strong>했습니다.
+          </>
+        ),
+        result: (
+          <>
+            자리를 비우지 않고도 일정을{' '}
+            <strong>즉시 입력·공유할 수 있게 되어 전달 비용이 줄었고</strong>, 일정이 시스템에 남아
+            이후 조회·수정이 쉬워졌습니다.
+          </>
+        ),
         images: ['/images/exam/schedule_3.png'],
       },
       {
         title: '시험·점검 일정 상태 관리',
-        problem:
-          '이미 종료된 일정, 현재 진행 중인 일정, 앞으로 예정된 일정이 한 화면에 섞여 있어 ' +
-          '담당자가 지금 무엇을 봐야 하는지 바로 파악하기 어려웠습니다. ' +
-          '상태별로 나누어 확인하는 기준이 없다 보니, 누락·중복 확인이 발생하기 쉬운 구조였습니다.',
-        solution:
-          '일정·점검 정보를 상태(종료 / 진행 / 예정)와 업무 영역별로 구분해 볼 수 있도록 화면을 개선했습니다. ' +
-          '원하는 구간만 선택해 확인할 수 있게 필터·섹션 구조를 두고, ' +
-          '한눈에 시험·점검 현황을 파악할 수 있는 뷰로 재구성했습니다.',
-        result:
-          '담당자가 필요한 상태·영역만 골라 확인할 수 있게 되어 일정 누락 위험을 줄였고, ' +
-          '업무 우선순위를 빠르게 잡는 데 도움이 되었습니다. ' +
-          '점검·시험 정보를 영역별로 모아 보는 UI로 현장 업무 흐름에 맞는 가시성을 확보했습니다.',
+        problem: (
+          <>
+            이미 종료된 일정, 현재 진행 중인 일정, 앞으로 예정된 일정이{' '}
+            <strong>
+              한 화면에 섞여 있어 담당자가 지금 무엇을 봐야 하는지 바로 파악하기 어려웠습니다
+            </strong>
+            . 상태별로 나누어 확인하는 기준이 없다 보니,{' '}
+            <strong>누락·중복 확인이 발생하기 쉬운 구조</strong>였습니다.
+          </>
+        ),
+        solution: (
+          <>
+            <strong>일정·점검 정보를 상태(종료 / 진행 / 예정)와 업무 영역별로 구분</strong>해 볼 수
+            있도록 화면을 개선했습니다. 원하는 구간만 선택해 확인할 수 있게{' '}
+            <strong>필터·섹션 구조</strong>를 두고,{' '}
+            <strong>한눈에 시험·점검 현황을 파악할 수 있는 뷰로 재구성</strong>했습니다.
+          </>
+        ),
+        result: (
+          <>
+            담당자가 필요한 상태·영역만 골라 확인할 수 있게 되어{' '}
+            <strong>일정 누락 위험을 줄였고</strong>,{' '}
+            <strong>업무 우선순위를 빠르게 잡는 데 도움</strong>이 되었습니다. 점검·시험 정보를
+            영역별로 모아 보는 UI로 현장 업무 흐름에 맞는 가시성을 확보했습니다.
+          </>
+        ),
         images: [
           '/images/exam/qau_1.png',
           '/images/exam/qau_2.png',
@@ -130,15 +179,26 @@ const projectData: Project[] = [
       },
       {
         title: '시험물질·동물·일정 CRUD',
-        problem:
-          '시험물질 정보, 동물 배정, 시험 일정이 문서·엑셀 중심으로 흩어져 있어 ' +
-          '등록·수정·조회가 번거롭고 최신 상태를 공유하기 어려웠습니다.',
-        solution:
-          '시험물질·동물 배정·시험 일정에 대한 등록·수정·삭제·조회 기능을 웹으로 구현하고, ' +
-          '권한과 누락 과정 확인까지 포함해 업무 흐름에 맞게 정리했습니다.',
-        result:
-          '현장 담당자가 브라우저에서 바로 자료를 관리할 수 있게 되어 정보 동기화 비용을 줄였고, ' +
-          '시험 진행에 필요한 기초 데이터를 체계적으로 유지할 수 있게 되었습니다.',
+        problem: (
+          <>
+            시험물질 정보, 동물 배정, 시험 일정이 문서·엑셀 중심으로 흩어져 있어{' '}
+            <strong>등록·수정·조회가 번거롭고 최신 상태를 공유하기 어려웠습니다</strong>.
+          </>
+        ),
+        solution: (
+          <>
+            시험물질·동물 배정·시험 일정에 대한{' '}
+            <strong>등록·수정·삭제·조회 기능을 웹으로 구현</strong>하고,{' '}
+            <strong>권한과 누락 과정 확인</strong>까지 포함해 업무 흐름에 맞게 정리했습니다.
+          </>
+        ),
+        result: (
+          <>
+            현장 담당자가 브라우저에서 바로 자료를 관리할 수 있게 되어{' '}
+            <strong>정보 동기화 비용을 줄였고</strong>, 시험 진행에 필요한{' '}
+            <strong>기초 데이터를 체계적으로 유지</strong>할 수 있게 되었습니다.
+          </>
+        ),
         images: [
           '/images/exam/substance_1.png',
           '/images/exam/schedule_1.png',
@@ -152,12 +212,6 @@ const projectData: Project[] = [
 const CATEGORIES: Category[] = ['All', 'Frontend', 'Backend', 'Fullstack'];
 const DELTA_PER_STEP = 160;
 const STEP_COOLDOWN_MS = 420;
-
-const pickKeyPoint = (text: string) => {
-  const normalized = text.replace(/\s+/g, ' ').trim();
-  const sentences = normalized.split(/(?<=[.!?])\s+/).filter(Boolean);
-  return sentences[0] ?? normalized;
-};
 
 /* ─── 라이트박스 ─── */
 interface LightboxProps {
@@ -528,23 +582,14 @@ const Projects: React.FC = () => {
                             <div className="projects__section">
                               <h5 className="projects__section-title">Problem</h5>
                               <p className="projects__section-text">{c.problem}</p>
-                              <p className="projects__section-text projects__section-text--emphasis">
-                                <strong>중요 문제점:</strong> {pickKeyPoint(c.problem)}
-                              </p>
                             </div>
                             <div className="projects__section">
                               <h5 className="projects__section-title">Solution</h5>
                               <p className="projects__section-text">{c.solution}</p>
-                              <p className="projects__section-text projects__section-text--emphasis">
-                                <strong>중요 해결점:</strong> {pickKeyPoint(c.solution)}
-                              </p>
                             </div>
                             <div className="projects__section">
                               <h5 className="projects__section-title">Result</h5>
                               <p className="projects__section-text">{c.result}</p>
-                              <p className="projects__section-text projects__section-text--emphasis">
-                                <strong>최종 결론:</strong> {pickKeyPoint(c.result)}
-                              </p>
                               {c.images && c.images.length > 0 && (
                                 <div className="projects__case-gallery">
                                   <CaseGallery images={c.images} label={c.title} />
