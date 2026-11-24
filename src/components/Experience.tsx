@@ -8,7 +8,7 @@ interface ExperienceItem {
   period: string;
   company: string;
   role: string;
-  type: string;
+  summary?: string;
   tasks: string[];
   tech: string[];
 }
@@ -18,12 +18,14 @@ const experienceData: ExperienceItem[] = [
     title: '리드커리어',
     period: '2024.12 – 현재',
     company: '리드커리어',
-    role: '풀스택 개발자',
-    type: '파견직',
+    role: '전산관리책임자',
+    summary:
+      '헬스케어본부 시험관리프로그램의 전산관리책임자로서 프로그램의 전반적인 설계, 개발 및 유지보수를 수행함',
     tasks: [
-      'PHP 웹사이트 유지보수 및 기능 개발',
-      'MariaDB 스키마·쿼리 유지보수',
-      'PHP → React + Spring Boot 전환 작업',
+      '헬스케어본부 시험관리프로그램의 전체 개발 라이프사이클을 담당하며, 요구사항 분석부터 설계, 개발, 배포까지 신규 기능 제작 및 운영 중 발생하는 이슈에 대한 유지보수를 수행함',
+      'NAS 서버 환경에서의 서버 아키텍처를 설계하고 구현하여 시스템 운영 기반을 구축함',
+      '조회 시 과도한 리소스를 소모하는 레거시 코드를 분석하고 쿼리 및 로직을 최적화하여 조회 성능을 개선함',
+      '화면 캡처 시 보안 화면을 노출하고 원격 프로그램 실행 중 시험관리프로그램 접근을 차단하는 보안 기능을 구현하여 데이터 유출을 방지함',
     ],
     tech: ['PHP', 'React', 'TypeScript', 'Node.js', 'MySQL'],
   },
@@ -106,8 +108,9 @@ const Experience: React.FC = () => {
                     </h3>
                     <p className="exp__period">{active.period}</p>
                   </div>
-                  <span className="exp__type-badge">{active.type}</span>
                 </div>
+
+                {active.summary && <p className="exp__summary">{active.summary}</p>}
 
                 <ul className="exp__tasks">
                   {active.tasks.map((task) => (

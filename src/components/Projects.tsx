@@ -109,7 +109,7 @@ const projectData: Project[] = [
     overview:
       '비임상시험 업무의 편의성을 위해 개발한 시험관리 웹입니다. ' +
       '시험물질·일정·동물·QAU 업무까지 한 곳에서 관리할 수 있도록 풀스택으로 구현·유지보수하고 있습니다.',
-    category: 'Frontend',
+    category: 'Fullstack',
     tech: ['PHP', 'MySQL'],
     emoji: '⚗️',
     role: '풀스택 개발',

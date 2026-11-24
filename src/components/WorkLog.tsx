@@ -7,6 +7,7 @@ import QauDetailError from './worklog/QauDetailError';
 import ScheduleManage from './worklog/ScheduleManage';
 import AniControlQueryOptimization from './worklog/AniControlQueryOptimization';
 import ProfileImagePipeline from './worklog/ProfileImagePipeline';
+import PdfCopyViewer from './worklog/PdfCopyViewer';
 
 interface WorkCaseStat {
   value: string;
@@ -104,6 +105,22 @@ const workCases: WorkCase[] = [
     ],
     accent: '#fb7185',
     Content: ChangeRecordAppend,
+  },
+  {
+    id: 'pdf-copy-viewer',
+    date: '2026',
+    title: 'PDF 열람·인쇄 (COPY 도장)',
+    summary:
+      '크롬 내장 PDF 뷰어에서는 화면 오버레이가 출력에 안 남는 문제를, PDF.js 전용 뷰어 + pdf-lib 스탬프로 해결한 사례.',
+    tags: ['Case Study', 'PDF.js', 'pdf-lib', 'PHP'],
+    stats: [
+      { value: 'Custom', label: '전용 뷰어' },
+      { value: 'Baked-in', label: '인쇄·다운로드' },
+      { value: 'COPY', label: '자동 도장' },
+      { value: 'Fallback', label: '캔버스 인쇄' },
+    ],
+    accent: '#a78bfa',
+    Content: PdfCopyViewer,
   },
 ];
 

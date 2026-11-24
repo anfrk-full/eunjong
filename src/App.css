@@ -2473,6 +2473,13 @@ img {
   border-radius: 999px;
 }
 
+.exp__summary {
+  margin: 0 0 14px;
+  font-size: 0.92rem;
+  line-height: 1.65;
+  color: var(--ink-soft);
+}
+
 .exp__tasks {
   display: flex;
   flex-direction: column;
